@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leadership Control Room</title>
+<style>
+  :root{
+    --bg:#07071C;
+    --panel:#101033;
+    --panel-2:#161645;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --text:#F2F3FC;
+    --text-dim:#9695B8;
+    --text-faint:#5F5E7D;
+    --gold:#FFBC3A;
+    --coral:#F26444;
+    --blue:#4D88E8;
+    --cyan:#40BDA9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,"Segoe UI",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  [dir="rtl"] body{font-family:-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;}
+  .shell{max-width:1400px;margin:0 auto;padding:20px;}
+  .hidden{display:none!important;}
+
+  .lang-toggle{position:fixed;top:16px;inset-inline-end:16px;z-index:200;background:var(--panel);color:var(--text);border:1px solid var(--border-strong);border-radius:999px;padding:9px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;}
+  .lang-toggle:hover{border-color:var(--coral);}
+
+  /* ===== START SCREEN ===== */
+  .start-screen{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:40px 20px;
+    background:radial-gradient(circle at 50% 0%, rgba(242,100,68,0.12), transparent 60%), var(--bg);
+  }
+  .start-logo{height:44px;margin-bottom:36px;}
+  .start-title{font-size:38px;font-weight:800;letter-spacing:0.02em;margin:0 0 10px;line-height:1.2;}
+  .start-title span{color:var(--coral);}
+  .start-sub{font-size:16px;color:var(--text-dim);max-width:520px;margin:0 0 36px;line-height:1.6;}
+  .start-stats{display:flex;gap:28px;margin-bottom:40px;flex-wrap:wrap;justify-content:center;}
+  .start-stat{text-align:center;}
+  .start-stat b{display:block;font-size:26px;font-weight:800;color:var(--gold);}
+  .start-stat span{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;}
+  .start-btn{background:var(--coral);color:#fff;border:none;border-radius:12px;padding:16px 40px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 10px 30px rgba(242,100,68,0.35);}
+  .start-btn:hover{opacity:0.9;}
+  .start-note{margin-top:20px;font-size:12px;color:var(--text-faint);}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--panel);border-radius:16px;border:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-logo{height:26px;}
+  .brand-text p{font-size:12px;color:var(--text-dim);margin:2px 0 0;}
+  .energy{display:flex;align-items:center;gap:8px;background:var(--panel-2);padding:8px 16px;border-radius:999px;border:1px solid var(--border);}
+  .energy-icon{color:var(--gold);font-size:15px;}
+  .energy-val{font-weight:800;font-size:14px;}
+  .energy-val.low{color:var(--coral);}
+  .energy-val.ok{color:var(--cyan);}
+  .mission-label{font-size:12px;color:var(--text-dim);font-weight:600;}
+
+  .stepper{display:flex;gap:8px;padding:14px 24px;background:var(--panel);border-radius:16px;border:1px solid var(--border);margin-bottom:16px;overflow-x:auto;}
+  .step-dot{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border:1.5px solid var(--border-strong);color:var(--text-faint);}
+  .step-dot.active{background:var(--coral);border-color:var(--coral);color:#fff;}
+  .step-dot.done{background:var(--cyan);border-color:var(--cyan);color:#06251f;}
+
+  .layout{display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start;}
+  @media (max-width:900px){.layout{grid-template-columns:1fr;}}
+
+  .case-list{background:var(--panel);border-radius:16px;border:1px solid var(--border);padding:14px;}
+  .case-list h3{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin:4px 8px 10px;}
+  .case-item{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:10px;margin-bottom:4px;cursor:pointer;}
+  .case-item.active{background:rgba(242,100,68,0.14);border:1px solid rgba(242,100,68,0.4);}
+  .case-item.locked{cursor:not-allowed;}
+  .case-num{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+  .case-item.active .case-num{background:var(--coral);color:#fff;}
+  .case-item.locked .case-num{background:var(--panel-2);color:var(--text-faint);}
+  .case-item.done .case-num{background:var(--cyan);color:#06251f;}
+  .case-title{font-size:13px;font-weight:700;line-height:1.3;}
+  .case-item.locked .case-title{color:var(--text-faint);}
+  .case-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+  .case-item.locked .case-sub{color:var(--text-faint);}
+  .lock-icon{margin-inline-start:auto;color:var(--text-faint);font-size:13px;}
+  .dash-link{display:block;text-align:center;margin-top:10px;padding:10px;border-radius:10px;border:1px dashed var(--border-strong);font-size:12px;color:var(--text-dim);cursor:pointer;}
+  .dash-link:hover{color:var(--text);border-color:var(--text-dim);}
+
+  .main-col{display:flex;flex-direction:column;gap:16px;}
+  .section{background:var(--panel);border-radius:16px;border:1px solid var(--border);padding:22px 24px;}
+  .section.locked{opacity:0.4;pointer-events:none;}
+  .section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .section-num{width:26px;height:26px;border-radius:50%;background:var(--panel-2);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+  .section-num.done{background:var(--cyan);border-color:var(--cyan);color:#06251f;}
+  .section-title{font-size:15px;font-weight:800;}
+  .section-desc{font-size:13px;color:var(--text-dim);margin:0 0 16px;}
+
+  .script{background:var(--panel-2);border-radius:12px;padding:18px 20px;font-size:14px;line-height:1.8;border:1px solid var(--border);}
+  .script .who{color:var(--gold);font-weight:800;}
+  .script .who.a{color:var(--blue);}
+
+  .evidence-status{font-size:12px;color:var(--text-dim);margin-bottom:12px;}
+  .evidence-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media (max-width:700px){.evidence-grid{grid-template-columns:repeat(2,1fr);}}
+  .ev-card{background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s, transform .15s;min-height:110px;}
+  .ev-card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
+  .ev-card.opened{border-color:var(--cyan);background:rgba(64,189,169,0.08);}
+  .ev-title{font-weight:800;font-size:13px;margin-bottom:6px;}
+  .ev-hint{font-size:11px;color:var(--text-dim);}
+  .ev-body{font-size:12.5px;line-height:1.6;color:var(--text);margin-top:8px;}
+
+  .slider-row{margin-bottom:20px;}
+  .slider-label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:8px;}
+  .slider-label span.reading{color:var(--gold);font-weight:800;}
+  input[type=range]{width:100%;accent-color:var(--coral);}
+  .slider-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-faint);margin-top:4px;text-transform:uppercase;letter-spacing:0.04em;}
+
+  .approach-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:600px){.approach-grid{grid-template-columns:1fr;}}
+  .app-card{background:var(--panel-2);border:1.5px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .15s;}
+  .app-card:hover{border-color:var(--border-strong);}
+  .app-card.selected{border-color:var(--coral);background:rgba(242,100,68,0.1);}
+  .app-card.locked-card{cursor:default;opacity:0.45;}
+  .app-card.locked-card:hover{border-color:var(--border);}
+  .app-card.selected.locked-card{opacity:1;}
+  .decided-note{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--text-dim);}
+  .decided-note b{color:var(--text);}
+  .app-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;margin-bottom:10px;}
+  .app-name{font-weight:800;font-size:14px;margin-bottom:3px;}
+  .app-desc{font-size:12px;color:var(--text-dim);line-height:1.5;}
+
+  .impact-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .impact-label{width:150px;flex-shrink:0;font-size:13px;color:var(--text-dim);}
+  .impact-track{flex:1;height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden;}
+  .impact-fill{height:100%;border-radius:6px;transition:width .5s ease;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--coral);color:#fff;border:none;border-radius:10px;padding:13px 24px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:opacity .15s;}
+  .btn:hover{opacity:0.88;}
+  .btn:disabled{background:var(--panel-2);color:var(--text-faint);cursor:not-allowed;}
+  .btn.full{width:100%;}
+  .btn.ghost{background:transparent;border:1px solid var(--border-strong);color:var(--text);}
+
+  .verdict{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:14px;}
+  .verdict.best{background:rgba(64,189,169,0.15);color:var(--cyan);}
+  .verdict.partial{background:rgba(255,188,58,0.15);color:var(--gold);}
+  .verdict.weak{background:rgba(242,100,68,0.15);color:var(--coral);}
+  .outcome-text{font-size:14px;line-height:1.75;margin-bottom:18px;}
+  .learn-box{background:var(--panel-2);border-radius:12px;padding:16px 18px;border:1px solid var(--border);font-size:13px;line-height:1.7;color:var(--text-dim);margin-bottom:18px;}
+  .learn-box b{color:var(--text);}
+
+  .dash-hero{background:var(--panel);border-radius:16px;border:1px solid var(--border);padding:32px 28px;text-align:center;margin-bottom:16px;}
+  .dash-hero h2{font-size:24px;font-weight:800;margin:0 0 8px;}
+  .dash-hero p{color:var(--text-dim);font-size:14px;margin:0;}
+  .dash-score{font-size:52px;font-weight:800;color:var(--gold);margin:14px 0;}
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:800px){.dash-grid{grid-template-columns:1fr;}}
+  .dash-panel{background:var(--panel);border-radius:16px;border:1px solid var(--border);padding:22px 24px;}
+  .dash-panel h3{font-size:14px;font-weight:800;margin:0 0 16px;}
+  .result-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .result-row:last-child{border-bottom:none;}
+  .result-case{flex:1;font-weight:700;}
+  .result-chip{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:800;}
+  .result-chip.best{background:rgba(64,189,169,0.15);color:var(--cyan);}
+  .result-chip.partial{background:rgba(255,188,58,0.15);color:var(--gold);}
+  .result-chip.weak{background:rgba(242,100,68,0.15);color:var(--coral);}
+  .dna-summary{background:var(--panel-2);border-radius:12px;padding:16px 18px;border:1px solid var(--border);font-size:13px;line-height:1.7;margin-top:16px;}
+  .dna-summary b{color:var(--gold);}
+
+  @media (max-width:600px){
+    .shell{padding:12px;}
+    .start-title{font-size:26px;}
+    .start-stats{gap:16px;}
+    .evidence-grid{grid-template-columns:1fr 1fr;}
+    .section{padding:16px 16px;}
+    .lang-toggle{padding:7px 14px;font-size:11px;}
+  }
+</style>
+</head>
+<body>
+
+<button class="lang-toggle" onclick="toggleLang()" id="langBtn">العربية</button>
+
+<div class="start-screen" id="startScreen">
+  <img src="data:image/png;base64,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" alt="Skills Bank" class="start-logo">
+  <h1 class="start-title" id="t-start-title">Leadership <span>Control Room</span></h1>
+  <p class="start-sub" id="t-start-sub">10 real leadership situations. Investigate the evidence, diagnose the person, choose your move, and see the real consequence of your call.</p>
+  <div class="start-stats">
+    <div class="start-stat"><b>10</b><span id="t-stat-cases">Cases</span></div>
+    <div class="start-stat"><b>4</b><span id="t-stat-approaches">Approaches</span></div>
+    <div class="start-stat"><b>60</b><span id="t-stat-evidence">Evidence cards</span></div>
+  </div>
+  <button class="start-btn" onclick="enterApp()" id="t-start-btn">Enter the control room &rarr;</button>
+  <p class="start-note" id="t-start-note">Every case is graded — your choices build your Leadership DNA profile at the end.</p>
+</div>
+
+<div class="shell hidden" id="appScreen">
+  <div class="topbar">
+    <div class="brand">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA7cAAAExCAYAAACnElXvAAAACXBIWXMAAAsSAAALEgHS3X78AAAgAElEQVR4nO3d7VUcx7YG4PZd+s84AsYRgCMARwAnAqEIQBEIRSAUgYYIPIrAEIEhgjNEcIYIdFfL1fYYgcRH7+qq7udZi8X1uTbM9AxT/Vbt2vXTly9fmqZpjpqmOWmaZqeB6bhsmuasaZploc941jTNommagwIeS4k+p8+u9dQvBAAATdOG2zbUfnAtmLD/FBpw22D7uoDHUbLzFHABAJi4V24M4evfQInhdl7AYyida9Sf3VQtMN+4rrP0vz/XxcZ/166wX6X/e5W+AIB8Y/zdcX3/BT/z6k71XDfmb4732b1Sigxf/9BhKvbTwDZP39uvraDnvveD///txuB4tRF6L37w3wEA39rdGOP30/ftoOt0d4x/d8+/c5m+X2yM9XdDca9eRf1gAAY3S4Nb91XaZObWxuB4d2/5zUbQvdoIv6WKCuSL9DVWi0wVGNH9FaJe/6vUEyXa2QurNIZ+/FPj84bO5hj/ownlIXSP6e5ju90Y2ze/Xky4BRiXNigcpq8SB7rH2k5fm8+hGwwvNr5KEXWtx7yKnauvwHmGrSc1/601KdjW/hymxOfNdM02xviaG452k9t338uXd8b5J6/wCrcA43CUvsZ8g7o5GHblT5cpuFwMuceHJ8sVbC/1FgFGoAu0Y2802o3xx+mfr9P4vnzs5ItwC1CvWSr5OwncN1u6zZnfm3QtSj3ei7+cZbpBu043gwA16lZpTwP3zZZuJ30dp+qts3Q9HiTcAtRHqL3fdiqvFG7LdbQxIx/pOu1Bcw42UKNTY/w3th7T3Vm4BajLSRr0DHjUpg22nzI85lvBFqjUYVqdnOpK7YsJtwB12E37FB3fRo0EW4CHzdIYX3OTqCL839QvAEAF2tXaPwVbKrWbOdhqLAbU5DAddSfY9sDKLUC5zORSu92Mx4scCbZAZc4y9SGYDOEWoEyzFAqs1lKrLtjm2B/+RiMxoCKzjJ3jJ0W4BShP1/FXQwlqNcscbBfeKUAlTF4HEm4BypIzFECEnO/hc8EWqIhgG0xDKYByCLbULueN23naZwtQC6ceBBNuAcqxNOhROcEW4H5nGkTGE24BytAOenteCyqWa0XiOh2PBVCLQ12R8xBuAYa3b9CjcotMXT+v09/L2hsGqMRMb4B8hFuA4Rn0qFmuYHsj2AIVWuilkY9uyQDDOq3gyJ82VKzS/90Gi6tH/nezdKxRZ+54o9E5yRRsb1NZn2AL1GS/gn22zx3jm/T8OkWM8cItwHBmBe0dvE0D2kUa5Fbpn6PCxP7G9y4E75rdrkrb0OlDhgd8m94nT7nhAihBSZVZl+lzdLXxffWI/+45djfG9ln6DM8SfoVbgOGcDBzmPqcwezFAcLi4873TDYb7G4HXam952mD7KdOjOhRsgQodDTx+XadTGC6ab8faaN1n9n2/d3N83+27EaFwCzCMoVZtr1Nn5mWhJZ7rewbieRoMuy9hd1j7GYPtmwFuygD6MMRxZTcbY3zUquxL3R3jZ3fG+BeFXeEWYBiHmVdtL9P+3hqDwiqVdnXlXfN0/Y6cC5zdbrppyuGNZmtApXYzH+93ncb4XJ/PfVqnx9099m5C+/A5+5V1SwYYRq5V23YW97c0UIxlBWyVZqbbm4efUwi6LuBxjd1ueg/lmJR5L9gCFcu1atv2JHibeeIxWjehfbgxxn9+7O+0cguQ3zzTiuMUzgRdb6zqzlN5E/3LGWzP0woEQK0OMzzumwn0JNgc4++ewHAv4RYgvxyD3hSC7V2l7i+q3SzjOY3nA+1TA+hLjkaIN+n3TGmMXz+mAk1ZMkB++8G/8WaCwZYYs3QzkavSQLAFahc9ge3c7+8QbgHyiw63RwY9epA72Eb/XQDkEP1Zdup4tIcJtwB5zYPLO88dnUJPFvaGAzzZD/eFvkB31A8PEG4B8poH/zaDHn1YPOcIhme4VWkAjMgseAJbs70fEG6hXJrjjFNkudKNUiV60Abb1xku5G36e/CeBcYictW2GdFxP2GEWyjXWQor8FgGPV7qLFOwbQRbYIQiq7MuVbn8mHAL5bpKH5I/Ffj1H++bZ4tcubXXlpdoy4OPM13BN4ItMEKR4dYY/wjCLfAcZg7LpJSd52qD7adMV+9NKn0G4PGM8Y8g3AKMh5UwniNnsH0r2AI8i3D7CMItAEzXbsYO2+e6eQMQSbgFgGnaTXu4Io+t6JynFWIACCPcAsD05Ay2l4ItADkItwAwLbOMwfa6aZpD7y8AchBuAcYj8pghxiF3sN3XXR2gF7su448JtwDjEXm+HvXrgu1Ohmdym1ZsBVuAfhjjH0G4Bcgr8hB2K7d8T85gu+/YCmCCIj/3bPF4BOEWYDwMfDxkkTnYOnMZmKLIcLutNPnHhFuAvCJXbrd0peUebbB9nenCHAm2wIRFf/6deHN9n3ALkFd0qeap15MNOYPtm6Zpli4+MGHrVMES5bW9t98n3ALktQoe+NqypTOvKWkVNWewXbjoAOGrtz5rv0O4BcgvsjS5daw8efLa1/9Tpotw7mYL4G/RY/yez9yHCbcA+UUPfE0KNgLuNOUOtt5nAP/IsT3jtYB7P+EWIL9c+xI/KVGenP2MwfazYAvwjavg7Ued1+l+YuYl+IdwC5Bfu+/2OtNvPU4DrTNwx28348TJtWAL8KBcn8UH6Z7CUYCJcAswjJzlRO35pn+k36nL4jjtpnL3rQzP7jpNlqyneKEBHiHnGN9+7v+exoDJT2QLtwDDWGQqW9rUljD9N80oT34AHJF5xmB7I9gC/NBFxgqtTtto6o/0uydbWSPcAgxjPWAziIM0AK7SgfBWc+s1S5MVOYLtbSp9E2wBfmyonhd7qffCOj2G3Sm9VsItwHBOB1i93dSeifshreZeCbrVmaUZ+p0MD/w2rdhGn98IMBaLVO0ylK3Ud+PPNJl9OoUxXrgFGM66oG7GO4JuVXIG2yaVuAm2AE9TSnlwO5n9Lo3xqzGv6Aq3AMM6HXhm9z6bQbcbBO3RLcsiY7BtdEYGeJaLdGxaSbbvrOguxtRtWbgFGF7Jg0o3CP6RVpqXKehY1R3OIu2bzunAURMAz3I08Bak79lOzSbbbstfUhg/qXlVV7gFGF5b7vm2gtdhK4WcTxvly2cp9DhEPo9FuhEZwpnXGeDJ1hVNDu6lyq3NVd2jmj77hVuAMrTB4byy12Inreq2M77/SzO+p0qYw5wOGGybNMN/OuDvB6hVOz6+qeyxd6u6n9IYX8WEtnALUI6jCgPupr3UsEIJc/+O0rUd2rHJC4BnWVQYcDfdN6FdXAnzqwIeAwD/6Br3DLlC14euhLnbG3qdwu5S190nO0oz56VYmLAAeJbufPuSPtOfay99Nakx5jI9v0HHeCu3AOVpw8zHkb0uO2nlcVLn7fXgsMCbIOXJAM9X+wrufe52YB7sqCHhFqBMJ2nwK7XD4ktsnrd3VVuzisxyHvfzFO/GekYiQAZtwP21wKMA+3A36GadzBZuAcq1SAHiesSv0U5amVxtPF/qsPA6ATzbVRrzSjsHt0+bk9nLHD0bhFuAsq3S4Pd2pKu4na20z/jP1KRC06Ly7aQKAwCepzsm6D8jXcXddJAaTq42+ov0TrgFqEO3f6XmbsqPtZcGwKuKzgacKnunAV5umcb49xO4ltsbFVu9h1zhFqAe3UDwW9M0lxN43XbSkQNWcsu1pTwZoBfrNGH4y0QmskNCrnALUJ8u7E0l5HYruUuNp4q0F1liBjAxXdibWsi96KPvhnALUK8u5E5lADxIg759nuU5M/EA0KvNkPt+5H03mjRR+udLj5oTboHnWBVy1S4KeAwl6AbAn1PjqTE3pWjLYD9YxX2Wj4Er/cqTAWJ0x+nM0hGBY6/YerfRSfrJXg372IFKrVJJ7JD7INdptYhvr0nXfOokNWTaGuE16lZx99MgyPedp/fDbpoZj3pNDtPEAwD9W6Sv+cYYvz3C67yTFjBOnjpx+tOXL1++xD0uqMKlZjWM3OHG1xiD7psCVg1LHkvP7+yJPU0z4xFuUoBeD/NUBxP1+ucany5SSWDfjK8xot5v719aEsogdtNn/FiD7senbEdSlgwwfss08M3SWXofR1a6/Mk+3Ad9vqfZ01ng67/t5hggq6s0Brarub+mSYrrEb0Ex0+ZwBZuAaZluTEI/pL26H4eQaOKD/Z8fuP6gS7G6+DuxsdW6wAGcZUmGHfTGP8mVe/UPsa/fuwYL9wCTNcqreIdplXd31LYrbVZxWsruH+7TgHzofLgi+AO2yYaAIa1Sp/FXeXWr5VPaD8q4Aq3AHQuUthtQ9FPKezWVt70wZmrPwy2nZPAGxzlyQBlubozob0Zdmvx+kfNRIVbAB5ysVHe9HPar3tewX7dsz4Ogq/U7SODbZP+nciV7ncTfh0ASrcZdn+qqCfH8fcmsYVbAB5jvdGYqvSmFd2Zq1M7B/cpwbazCC5DV54MUIf7enKUuk3pLD3Obwi3ADzH3aYVbwsLujsTK4u9fcGZv0eB5ck79kEDVGe1sU3p59SYqqTy5a2HJk+FWwBearVRCtwF3RLKmo4fmtkdmZcE22bj9YtyOpHXAWCM1ilIHm4E3RIms/fuK08WbgHo02qjXOi34I68jzGF1dujFwTbzmngzcqDM+wAVKULut1k9seBOy9/M8YLtwBEuUjB6+e0P3eIAfD1yFcN36R9Un2ILB++d4YdgGqtNvbovhmoYmv77tgi3AIQbb1Rmvp+gKs91tXbNz2viF6kWfgoZxNs8gUwdt1q7jxtS8o9kf2viVnhFoBcupD7S+YOjIcjDFVvg0p9TwNn35UnA4xbty0pZ/Opnc1j54RbAHJbpQZIuVZxt1LAHYvzwAZQ0WffHozstQDg39bpc/5NxlXcv8ct4RaAoZymwS+HsQSq8wx7V5fBs+7KkwHGb5EmsnME3L/HeOEWgCG1g99/Mvz+gxEEqhzBtnMSeEOyPbEziAGm6ipTwN3qSpOFWwCGtsy0grtf8St9mbnb8Co4gB5X/noA8DhXmT7vv67eCrcAlGCRoQHF7iP+nRJdD1RWfRbc+EtzKYBpuMrQZ+NrgBZuAShFZCOjptKVwuv0uNcD/f7I10R5MsB0RHbjb9J56sItAMVYpX2lUWpcuV0OGGybDLPt7ypeUQfgaaI6/Xfmwi0AJVkGPpYtXXqf5Sx4tl15MsA0RH/eC7cAFGUZ3FXRKuHTrYObWe0oTwaYhHVwL4d94RaA0lx5RYpzEVwy3u7tnVd6bQB4vIvIayXcAlCayIHP8TPPF3n27ZbyZIBJiJzAVpYMQHGGbKDEw9bB3ZP3MnTMBmBYkWO8cAtAcZQll2sRvF/qVNMvgFELHeOFWwDgKY6UJwPwTKHVWcItAPAUq+CzCg+apjn0igDwVMItAPBUbfnwdeBVWyhPBuCphFsASuNImDpENn/acvYtwCiFnlog3AJQGuG2Du2RTR8DH+mxo5sAeIKVcAtAaSLDbejh8RPUrq7eBD5t5ckA47Ib+GyEWwCKY7WuHtFn3247+xZgVCLDrbJkAIoyT4EmijN0+7dsmuZz4M9/F30zBEA2kd3wL4RbAEoSOejdRp+vN2EngWffNs6+BRiF/dQwMIqyZACKElmCatU2ziq4u/GO7skA1TsKfAK3wi0AJTkKLknWTCrWWdM0l4G/4UQnbYBqtdtLXgc++K9jvHALQAlmKRxFEm7jRZ99qzwZoE7Rn99fx/hX3hzw9aZad9a6rEdSYrpKzXgWEy+ZnaVBKXIfzq1wm0X7Pn6fmkBF2EsBOnoiBOCllul+ZWH8+XoNdoJ/h3ALSfvH9oeLUZ3LEUxKtCW4x+nrZqJBtwu20YPeMvjn84+z4BLz0/R3ojkYULJ2fDtIpbjdGL+cYNBdBJcjN+n6fr13UpYM1GpvZOdfdkH3z7SiexbcObgEu5mCbSPcZrUObhqiPBmoTTfG/7GxmnuYAvBYzdMYHx1sm81qHuEWqNlYw183CP7eNM2XFMxORnTW5zwN7H9mCrY3wm127Q3NeeAvPZjA5A8wTlsp8LVj/P/S5+XpiLbIzdLzuUoLETn8PcYrSwYo30H6ajb2jl6kgaOm8qbDtKJ38Ih/t0/2Zw7jJL3mUXupF2miRHkyULO99NX1Kri8M87X8hl3uPEV2UPjrvNU8faVcAtQl607Ybd1nQbBVWGBdzfNRO8PEGg7t0pYB9OVJ/8e9AC20urAmLYnANwNu9dpbN/8KiHwzjfG+NyBdtO/zkAXbgHqt3NPee/NRthdbwTeiEFxf+P7LIXaXKVIP3JqZW9Qy7QKEfV+OJ5ogxZgOroxfnPv6u2doNt9X22uYvZkd2Nsn6fvuwOG2U3nd5/vT1++fPky+MMCeJ7aOyYP/fl7ec//djf8zh7Y61vKwPY91xn3KUe9lu/vzkpXaJ7eV1Hvl5v0Og85iRH1+uf6jLsoaEJqzPr6e3bvnsdPL/wtQ/9dXd/zuXjfBPd9nzHzwI73fblNn/3/CrdWbgGm675Bd0w3uMpVy9B1/446+3Y7vda1TwIA9Om+ho1jGuNP71ul1i0ZgDF6r1S1KKdpFSHKuxF1Ewfg+y4fahYp3AIwNtdW8YoUefZto3EYwCTcfu8oOOEWgDG5GdFZgWPT7vX6GPicdkxqAIzabRrjH+yxINwCMBbdbK7uyOU6TRMQUU5SIxQAxuckTZQ+SLgFYAy62dzvDnoMbh3c6GtLeTLAKL15zOe7cAtA7QTburTn0n4OfMR7OmUDjMqjgm0j3AJQue4sW8G2LkdpUiLKaTqjGYB6tePEr0+pyBFuAajV57Ri+805dxRvHdz8SXkyQN2eNXkt3AJQm3Ym963mUdU7S2cVRjn43nERABTrYwq2T568Fm4BqMllGvDuPbyd6kTvjV0oTwaoRrta+9tLxgbhFoAa3KQBTxnyuLTlZu8Dn9GWs28BitdVZLWT1xcvebDCLcBwfkmlN5HnftbuJnVJnL90wKNY0WffHqdJEYCcDlNgM8Y/7DZNcM77qsgSbgGGs0qlN+2H+n+apjkP7iBbk8/pmsw1BpqEo+AnqTwZyG2dAts8dfw1mf2P6zRxPUsTnL31zxBuAcqwTDf4s1R++zF9+E/JdZrl/iXNeC+9NyfjIk3uRNl29i0woKuNyexf02plZEO9Et2ke5tfU/lxyMT1q+ovE8D4XGyU4M5TSeVu+r4zsmd7mULs0l7ayTtJkxpbQRfiXXqfORMZGNLVxufQ7M4YvzeyV+Z6Y4zP8tkr3AKUbXXP7GY3EM7T993AQNCnm41B/WJke2ijmiJNaZ/xOoXbyP2x86AbrKjXP9eEz8Ke9iz6usaRTdjIa70R/jq7d77mqfqkdLcb43v3PftxfT99+fLlizcxUKlLjWL+NkuD4d3vzQDhtyu16ga2LtA6kxYAnqe737n7PXf47cb4bly/SBNxRVRfCbdAzYTbp5unr027z2i2czesCq8AMKzNie3Oc8b4u2G1mPD6I8ItUDPhFgCAr3RLBgAAoHrCLQAAANUTbgEAAKiecAsAAED1hFsAAACqJ9wCAABQPeEWAACA6gm3AAAAVE+4BQAAoHrCLQAAANUTbgEAAKiecAsAAED1hFsAAACqJ9wCAABQPeEWAACA6gm3AAAAVE+4BQAAoHrCLQAAANUTbgEAAKiecAsAAED1hFsAAACqJ9wCAABQPeEWAACA6gm3AAAAVE+4BQAAoHrCLQAAANUTbgEAAKiecAsAAED1hFsAAACqJ9wCAABQPeEWAACA6gm3AAAAVO+VlxBgUEdN08y9BP9ysfEPF4/494kza5rmJMP1XTRNs/I6Pui08J9Xu/301bdVem9Hi3r8zcj/NnN9vrXOmqZZZ/pdkybcAgyrDbd7XoN/eXfP/3aZbgyuUuC9cqOQxdEDr0ff5ul3cb+I10DA/cd+0DW+zBhuo/5OL0Yabmfpue1k+F1vjVf5KEsGoAbtBMBBuoH7o2ma/6WA286G73oFw+QKnIcDPLcpexe40gc1yBVsz9M4RSbCLQC1am9Mjpum+TOtLJwp8e7Vbqabv9aWldvsFmn1CqZmkTHY+lzLTLgFYAy2U9D9b9M0S6tSvci1F61j9Tav7Uwls1CS9j3/OsPj+SzYDkO4BWBsDlLp8oWV3BfJHTYPvF7ZHbgBZ0JyBdtrf1fDEW4BGKu9tJKrcc7THaVS4dys3uannJ8pOMoYbPc1kBqOcAvA2L1Lzac0nnq8oUJm7lJo/prEUJ7MmLXB9lOG53cr2A5PuAVgCnZSmbKVwR+bp3LVIWzbLz2IPRUOjJRgOzHCLQBT0a5Q/W4v1A8NfX28PsN4p7qBkdnPHGyvvIGGJ9wCMDWfBKjvGvraHDqiZjBL156R2E3v5xyOBNtyCLcATNEn5a/32k+lwUPaUj4+mO3UYApqtpu2oeRoivcmY4jmEYRbAKZqqUvsN0pZ0bayPpzXJheo2DxzsNWMrTDCLQBTtWXG/V9mmY7KeIw9Ew+DWihPpkKz9JmeI9ieC7ZlEm4BmLIdXWL/VtpqndXb4Zj4oTaztGK7k+Fxn/t8KpdwC8DUvbNK+FVpZ8y6eRzWnnOHqYRgy9+EWwBQXjbPdGP4FM68Hd4HxwNRgUWmz69rEz7lezX1CwAwUjeFB7bN0LI34OPYfAz7afZ/ikq9YTua8GtSikX621hP/UJQpPb9eZDhgV37O6iDcAswTqvK9pLO0grRbrqB2M/UFGTTyYSDVKlldq/T6+KGcjjdvnQrVpRmkakJ3o1gWw9lyQCUYJ2C5VlqbNSG3d/S/qZcDia69/ZwgImEp3AszfCOvQ4U5jRTsL1N733BthLCLQClukgrij83TfMx02OcYqOQ0p+zFcMyOB6IUhylRoDRbtOK7ZVXvh7CLQClW6eA82sqD4s0tXA7C9iv1vdrtKObdRG2NF6jAO1n9KdMD+NQsK2PcAtALa7SntzrwMe7PbHusH2H+dug8lWrt2U48FowoJzB9o1mdnUSbgGoyTqFp9vAxzylvYV9B5VFmoToewLCfs9ynDoeiAHspp4MObxRpVAv4RaA2qyCy4encrbqblqp7lN3Q9j3jeG2gFsM5cnktptWUXM0vnvv/V034RaAGi2bpvkc9LhLOHc3h75Xba839qdF3BxOsdlXqXYyrqIxbTmD7XllR+hxD+EWgFpF7v0be9nlLGAldDPsrAMmHw506y3K8YSqHBjGLE1k5gq2JtBGQLgFoFarwNXbsYfbiLNtl3f+2ert+DkeiCiztGLb99aJ+1z7bBkP4RaAmkXtjRr70TN938idp9XaTcuAY4HcgJZl2/5EAnTBdifDxb1WgTAuwi0ANbu7WtiXMa/czgP2FT/0OvT9+uzo1FucA5MO9Cx3sL07MUfFhFsAancZ8PjHXGrZdxC5+U6IjWg6JEiV52wC1Q7kscgUbG/TZ4lgOzLCLQC1c9D+0/QdDr+3OrsKOPNWuC3PVmAVBdPRBtvXGZ7tbVqxvXrEv0tlhFsAahdxgzLW44AOAxq0/Gh1tu/V2y0Bt0g7jlHhBQRbeiHcAlA7ZWWP1/fxP5dpdfZ7Ilb0+n4e9OOdPdE8w1GmYNukI+QE2xETbgGonRuVx5kF3EA+plPuOnVT7tOBPZ7FWjoeiCdog+2nTBfsje7e4yfcAlA7K7eP03cp7+0TVmUjbiit3pZpO6iRGOOTM9i+FWynQbgFgGmIaCT12ImFi4Azb096/nlTFNFpvEkVAiYf+J79jMH23ITLdAi3ADB+uwHHazx1FaTvVZNt+ztfrJ10+Bj0sxdKx3nAbsbu2uca0E2LcAsA4xdxtu1Tj2CKKAm0evtyJwHHNTWpq7UyUO7aTZ8dWxmuzKVgOz3CLQB8q+8S2qH1fYP3nBK/VUAZrNLXfkQFgD3HA7FhnjHYXvt8mCbhFoDaRXRm/dHxNjU5CriZfG5JYd8rec687cdVargTwfFANOlzepkx2O5rNjhNwi0AtXPj/H19r158fkH4X6Yuy30SbvtxFthgauF4oEmbpRXbvvf93+c2feYJthMl3AJQu4imNU/dT1qqeToTtk8vaQSzDmgks6dxUW8OAyYfmhRqlCdPU+5guz+yyhueSLgFoHYRK7djuTnqe9X2tofS4ogjOaze9mMdeC2P7YGcpLPMwfZq6hd86oRbAGoXccM8lnDbdzfhPlZdrwIadgm3/VkGHw+kPHk6FunM4xyOBFsa4RaAys3Tead9G0NZ8n7Atelr1bXv1dvt9Hzpx2lQx/CtjOebMqycwfaN9xUd4RaAmkWccxrVVCe3vlczr3tcGYm4EbV62591YAnxnvOJR+80c7B1njJ/E24BqNUsKNCMYQVgFhBO+ryBXKWuy306VPLaq3Yi433Qzz7V5Xy0jtLxTzmcC7bcJdwCUKuToDMTxxBuDwOuTd83kX1f5y0Ni3p3GlTJsCWUjFIbbD9lemLnqjW4j3ALQI3mQaWN1yNpJtX3tfkccG7kIuDYGeWu/TsKPB4oonM2wzjMGGw/C7Y8RLgFoEbLoFXbMdxszwOO3ohaZev75+4487Z3q+DjgTQCq99uxpX4a8GW7xFuAajNIujcxNuRlCT3vXoZeV0iboit3vZvGbBHurO0V7pqu6m7fMRk413XaTKk7yoSRkS4BaAmkcdLnI3kpqnkRlJ3XaUb1j7ZdxvjKPB4IPtv65Qz2N4ItjyGcAtADXZTEIoKtjcjKUk+LPhs24f0HWy2BdwQ68By0AOlptWZBW4Pues2/U0LtvyQcAtAyeYp/PwZVIrcORnJjVPE2bbRDbYiVu2E2xgXgccDndkvXY1Zei/0PZH2PYItjyLcAlCa7vzadlXgv4GrtZ3PIzrb9qDnn5ljNXudjvXo02v7OMOcBpSSN2kFcAx/h2PXBdvIyca7tnTW5rFeuVIAozSrqAvpPH3tBnX6/Z7bEZVDRjyPXGFjGTCJcezVbioAAA0dSURBVGgvZ5jDtE2g75LUnRSeTwt6rvzbMvNndOcgve9MgPBdwi3AOLU3H394bX9oTPu4+u4SfJ7x2izTvuc+yxxPhNswqxRAPwT8gndpZfCikOfKP9q/p70Br8ciTYAqUeZBypIBmKo3I7qB3g3Y/5Z7haTv37eTrgsxzgKPB1ooKy9OZKf6x1KezA8JtwBM0ZuRrer1vWp7M0C4jbhp1YE31lEq7e/btlX3opQQbDuvK9pywwCEWwCmZmzBtqnsbNuHrAIaFQm3sdaBnakPdL0uwlFBwbZjZZ8HCbcATMkYg+1RQGOfoa5R36u3WwJSuLa0/2PQL1k4HmhwpQXbJq3sazrGvYRbAKagLbP9daSljn2vTl5mONv2IcuAMlert/FOAo8HUp7MfY7tqec+wi0AY/cx3QRdjfB5zgO6lw4ZJtYBe30PlDBmETWJsGeVjgeY+OAbwi0AY3WbVmtPRnx0RN+B4raAcyQjblit3sZrJ4/eBv2Wd1bpuMeOiQ/uEm4BGKuttB9wMeJ9l32HtmUBEwEXqYy8T313k+Z+Z6msPcLSCjz3eGdfNpuEWwDGbCs1RPk97SM9GdEN8n7A2balnCHZ9+rttpW/bA4DjweySsd9lCfzN+EWgKlob44/bITc2vW9antT0L7kiJtVq7d5rAPLwI91v+Yee/6+6Qi3AEzN1kbI3a/0uc8CjugoZdW2Sa9N3+WtQlE+y+DjgZQn1+lz4KM+VZ5MI9wCMGHtSu4flZY6RgS1oRtJ3dX36u2WxlJZnQbsnW7S61jae5Ufe5M+t6L2ZG8VNkHHQIRbAKbuXWpiVNNqUN8leJ8HPNv2IYuAvZtWb/NZB15vZah1ebsxWRU5wXTgbxzhFgD+ulmuJeDupiMw+lTqSljEmbdKF/Np93C/D/ptHzQJq8L5nRXVVeB7olG2jnALAH/ZqSTgRpxtW2q30YgyQys7eZ0GlqLqklu28wc+r6JK1hvlybya/BUAGKebSm785hsrabvpxmRIXcDdL+C814f0HW5Lfp9cpfdyn0cenbj5ze4ovZZ9/33vpNdSiXJ5Hgq2naPU8yDC6/S5djHNSz9twi3AOK0qPhNyd+NrP6AE90d2UjlsiZ2UDwMCQumTIGepBLUv2+m1deObzyqFmd8DfuNx+nv1epbj+hGTcBepo/Zx0KNepHGk1ElKgihLBqA0V+nG5CTdnPySGpJcZ3yce4VODvS9antd0Nm2D4kI37om57cMPApmaZ9lMa6fMDF4GtA0rrNd8QQvLyDcAlC6VVq9a4Pub4H79+56V1jzoXlqiNSnGkrX1wGh6FAYGsRR4PFA9t8O7/qJWzrWwRNNx5qOTY9wC0BNuv2wbwNn/DeVtDczohFSLYEg4sxbjaXyiwwzB/beDuqpwbazDJ6wNOkxMcItADU6SzdS0QH3oKCZ/4izbWvZj7YMeK2VJg/jIvAomFMrdYO4TX9Pz/08OQr8LN9Rnjwtwi0AtbrKFHBLWA3a77ljcFPhikbfj3fPmbeDOQ3aQ688Ob/b9Pn0kr370Q0Q35n0mA7hFoCaXWVYgXtdwP7Mvp/jTVoNrYnGUuNyGDQxZaUunz6CbecsuGmg478mwlFAANSu68Lad7OlTYcDrgjNAvaHzhyd8tWRIDSYbrWuz2OeOu/S+9t7PFZfwbbT/j3+GfSI95xxPQ3CLQBjcJJutPo+A7YzZLiNONt2K93sTd12ur61rWKPRbd3PmJiyjmnsd4EHCN2lfZjvwt65Kfpb30V9PMpgLJkAMZgFRxQHntuYwSls7F0TR5WVDOhbftvw7wJvLZnQcdFNfZkT4NwC8BYRJaXbg3UkGRuhTVcCXuqp2wdOMFwYHKod5HBtslw9u2eCa1xE24BGItVcEOSIcKtczvzcLM7rHZv7MegR3CmK3ZvPmZa+bxIfRSiLExojZdwC8CYRDaQGeIGWejKwyTC8E4cD1S088x/J5Fn33pPjJhwC8CYjGnf7WHA2bbcb8fqXhGiylH3dMV+kfMByrvXwWH6YOBeCgQRbgEYk767dw7Jqm1eVm+H1/79vg16FO8G2lpQuyGCbaddXb0M/vnKk0dGuAVgTCKP/cjZ2GmWGh2Rj8ZDZTgLDDRLYebJhi7fjfy73LaiPz7CLQBjEznTn4ugld+W1fJiHAYeD3RW6TWZqlU6+zbKsfLkcRFuAaA8wu0wXPcyRB4H89okRnVOgzvhm/AYEeEWAMqymxockd+BstViLAOPB7LXsj6Re+J3lCePh3ALAGXR2GhYVm/L0QaOm4BHsxXcWZ3+RZ6F3Gg4Nh7CLQCURcnksITbcqwD/x72TCRV5zTw7NtGefI4CLcAUI6jtKrEcHas4BTlKrCh0AevdVUi92I3JjzGQbgFgHJYtS2D1duynAZ2Qbf/ti5tOfnnwEfcvtfmY7xwUyHcAkAZ5qmhEcMTbstzFFSSuuP1rs5JYHnyVgFn+/ICr1w8AEZmr9KnE32DPYbzf++Keq230uvhJrccq/Sa/B7wiGwFqMsqrbB+CHrUe6mKRtOxCgm3AFCGyHDbBtv9Eb7OV4HHJh0Kt8XpSlJVOHCWPjOj/v4XqZpmPfkrXRllyQCMSWSAuw782e3j3g78+WMNaZHdTQ/svSvSUdDxQNT5XoiiPLlSwi0AYxIZRiJn8CNv0m5HfJMWXTaowVd5ojvmUo/ITtpNmuAaY8XLqAm3AIxJ5I3IKujnzoJD1Jj3jbVB5zzw5zsWpEwXwaGGepwFr+Trpl0Z4RaAMakx3B4GN7SJLN0tQeSq9LZzUIt1GrxVgDpEr+Rvp/calRBuARiLefC+1augnxu5Ongd+LhLcRG8cmP1tlyHgUfCUI+L4LNvj5Un10O4BWAsokNIREicB3b7bCbUECXyeR4qSyzWyqoaSdQ5yJ2xV8CMhnALwBjMMjRliihLjg7kwu3LbWksVbSz4FU76rAO/jzdMZFSB+EWgDE4Cd63ehH0cyMD+fmEzmhcBQcc3XnLFr1qRx0W6UzvKO/swS+fcAtA7eYZVkAjwm10I6kxd0m+T+Tz3XPmbdHWVtdJoieilCcXTrgFoHaL4JDYBIXbyJuwmwmG20Xw6p3V27K1f6Mfp34R+FrFEXlM1J4mc2UTbgGo2SLdbES6CWgm1e4RPgh8zFPZa3tX5PMWbst34nggMhwTdaqSo1zCLQA1mqUg8zrDY48ITNFBSbjt37bjQKpgEoImeHV1a8KfscUTbgGozX5aSc0RbJugm5jIG6/LoM7ONbgKXrERnMrXvgfeTv0iEF6mvmefd5mEWwBqsZuC5h9pFS2HzwFBcTf48U99RSGy4Yszb+twFtw1lzqcBu/DX/g8KI9wC0DJuk7I7WrMnxlXazsRQSly1fZWuA1tpOXM23ocOh5o8tbB1RbKkwsk3AJQiv30dZpuGNoV0/82TfMhHaCf22VAl+RZcDiaWofk+6zTGb9RdEqtQ3SwoQ7L4DOwD+zFL8urqV8AgJFq9wN98eK+yGnAz4w+29YZjH+JbDa2kyoKprqvuSbLtO/yeOoXYuJOUgCN+uxdpO0m66lf6BJYuQWAb32s8Gzb64Aji2p1kY5wimL1th6nwe8FyrcKmqzsbAf/fJ5AuAWAf7sJulGZB5/Ja+/Xv0VeD/tu67H2epGqWiI7qR8rTy6DcAsA/3YUVF7mbNu8os+8FZjq0VY0vJ/6RSD8M9i2kAIItwDwj7dB5chN8I3Vuf1e31gFN5IRbuty6nigyYue5NhRnjw84RYA/nIeOPN+6GzbQURel9fOuKzOkeOBJu8seA/2u9RcioEItwDwV7CNXFmNXOW7CVxtrt0yOMw4aqYuK6/Z5OU4Ikp58oCEWwCm7mPwzc4s8FiaxqrtD0VeH0GpPtHnnlK+i+D3wJ6O6sMRbgGYsjcZbkKi92YKt98XuYqyowSxSkeOB5q86BL109Qhn8yEWwCmqD0S4tdMwTAyPH9OpZY8bBV8BIjV2/rkKE2lbOvgz+YtE4/DEG4BmJr36TzCqwzPezet7kVZevc+SuTqrZBUpwvHA03eIriD9p6u6vkJtwBMRXsT80sqF8t1bE5k8Lm1MvBokY2lttzAVus0eFWf8uU4f1xX9YyEWwDGru2E/Ftarc1dwht54yTYPt46eJXb6m29Dh0PNGmr4BV85cmZCbcAjNFNumH5JQWPIY7KOUo3NlHcMD1N5PU60DymWqu0gst0Ra/gH6juyOf/lGMAFcuxZ5J6XKdjfX5NQeN04GZLkTcz197/T3YR3CHXzWu9zhwPNHnRXfPPlCfn8X9mq4BK3ToofdJu0h7adnX2P03T/JyaN50UEvrmabY+ivf+80ReN+da1i36aBjKdpEmR6Nsy1x5vEp7UH5LH8pmFIAarApYleuL1beHrTZe4/XGtRqixPipdoO7cOqS/DzL4BXWedDnUtR7yTFS/1in90afASTX5/sq8D2Sq/leCU6Dz63eDfyMoNU0zf8D8MWphmWk0FAAAAAASUVORK5CYII=" alt="Skills Bank" class="brand-logo">
+      <div class="brand-text"><p id="t-tagline">Investigate. Diagnose. Decide. Impact.</p></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="mission-label" id="missionLabel">Mission 1 of 10</div>
+      <div class="energy">
+        <span class="energy-icon">&#9889;</span>
+        <span class="energy-val ok" id="energyVal">100</span>
+        <span style="color:var(--text-faint);font-size:12px;">/ 100</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepper" id="stepper"></div>
+
+  <div class="layout">
+    <div class="case-list" id="caseList"></div>
+
+    <div class="main-col">
+      <div class="section" id="sec-watch">
+        <div class="section-head">
+          <div class="section-num" id="num-watch">1</div>
+          <div class="section-title" id="watchTitle">Watch the case</div>
+        </div>
+        <p class="section-desc" id="t-watch-desc">Read the scene, then move into investigation.</p>
+        <div class="script" id="scriptArea"></div>
+        <div style="margin-top:16px;">
+          <button class="btn" onclick="completeStage('watch')" id="t-btn-investigate">Continue to investigation &rarr;</button>
+        </div>
+      </div>
+
+      <div class="section locked" id="sec-investigate">
+        <div class="section-head">
+          <div class="section-num" id="num-investigate">2</div>
+          <div class="section-title" id="t-investigate-title">Investigate — evidence board</div>
+        </div>
+        <p class="section-desc" id="t-investigate-desc">Open cards to gather what you need. Each card costs a little Leadership Energy.</p>
+        <div class="evidence-status"><span id="t-opened">Opened</span>: <span id="evOpenedCount">0</span> / 6</div>
+        <div class="evidence-grid" id="evidenceGrid"></div>
+        <div style="margin-top:18px;">
+          <button class="btn" id="btnToDiagnose" disabled onclick="completeStage('investigate')">
+            <span id="t-btn-diagnose">Continue to diagnosis &rarr;</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="section locked" id="sec-diagnose">
+        <div class="section-head">
+          <div class="section-num" id="num-diagnose">3</div>
+          <div class="section-title" id="t-diagnose-title">Diagnose — build your assessment</div>
+        </div>
+        <p class="section-desc" id="t-diagnose-desc">Use what you found to rate the situation.</p>
+        <div id="sliderArea"></div>
+        <button class="btn" onclick="completeStage('diagnose')" id="t-btn-decide">Continue to decision &rarr;</button>
+      </div>
+
+      <div class="section locked" id="sec-decide">
+        <div class="section-head">
+          <div class="section-num" id="num-decide">4</div>
+          <div class="section-title" id="t-decide-title">Decide and act — choose your approach</div>
+        </div>
+        <p class="section-desc" id="decideDesc">Based on your diagnosis, what does this person need from you right now?</p>
+        <div class="approach-grid" id="approachGrid"></div>
+        <div style="margin-top:18px;" id="decideActionArea">
+          <p style="font-size:12.5px;color:var(--text-faint);margin:0 0 14px;" id="t-noPreview">You won't see the impact until after you act — just like in a real conversation.</p>
+          <button class="btn full" id="btnTakeAction" disabled onclick="takeAction()">
+            <span id="t-btn-action">Take action &rarr;</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="section locked" id="sec-consequence">
+        <div class="section-head">
+          <div class="section-num" id="num-consequence">5</div>
+          <div class="section-title" id="t-consequence-title">Consequence — what actually happened</div>
+        </div>
+        <div id="consequenceArea"></div>
+        <div id="impactArea" style="margin-top:18px;"></div>
+        <div id="nextCaseArea"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="shell hidden" id="dashboardScreen">
+  <div class="dash-hero">
+    <h2 id="t-dash-title">Your Leadership Control Room results</h2>
+    <p id="t-dash-sub">Here's how your 10 decisions played out.</p>
+    <div class="dash-score" id="dashScore">0%</div>
+    <p id="dashScoreLabel">best-fit calls out of 10</p>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-panel">
+      <h3 id="t-dash-cbc">Case by case</h3>
+      <div id="dashResults"></div>
+    </div>
+    <div class="dash-panel">
+      <h3 id="t-dash-dna">Your Leadership DNA</h3>
+      <p style="font-size:12px;color:var(--text-dim);margin:0 0 16px;" id="t-dash-dna-desc">How often you reached for each approach across all 10 cases.</p>
+      <div id="dashDNA"></div>
+      <div class="dna-summary" id="dnaSummary"></div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-dim);">
+        <span id="t-energy-left">Leadership Energy remaining</span>: <b style="color:var(--text);" id="dashEnergy">100</b> / 100
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:20px;">
+    <button class="btn ghost" onclick="restartApp()" id="t-restart">Restart simulation</button>
+  </div>
+</div>
+
+<script>
+const DATA = {"cases": [{"title": "Ahmed", "sub_en": "The New Team Lead", "sub_ar": "قائد الفريق الجديد", "script": [{"who": "m", "en": "Ahmed, you're taking over the team starting tomorrow. We have a client meeting in two weeks. I need you to make sure we're ready.", "ar": "أحمد، هتستلم الفريق من بكرة. عندنا اجتماع مع العميل بعد أسبوعين. محتاج أتأكد إننا جاهزين."}, {"who": "p", "en": "Understood. Is there a process I should follow, or documentation from whoever led this before?", "ar": "تمام. في عملية محددة أمشي عليها، أو توثيق من اللي كان مسؤول قبل كده؟"}, {"who": "m", "en": "There isn't one — this pod is new, and the last lead left without writing anything down. You're building this as you go.", "ar": "مفيش - الفريق ده جديد، واللي كان مسؤول قبلك مسيبش أي توثيق. انت هتبني ده وانت ماشي."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "Team Lead, Client Delivery Pod. Owns coordination of 4 analysts, client communication, and the bi-weekly status report. No prior playbook exists.", "ar": "قائد فريق تسليم العملاء. مسؤول عن تنسيق 4 محللين، التواصل مع العميل، وتقرير الحالة كل أسبوعين. مفيش دليل عمل سابق."}, {"en_t": "Team background", "ar_t": "خلفية الفريق", "en": "4 analysts, all hired within the last 3 months. Mixed skill levels. No one has worked together before this assignment.", "ar": "4 محللين، كلهم اتعينوا في آخر 3 شهور. مستويات مهارة متفاوتة. محدش اشتغل مع التاني قبل كده."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد النهائي والمخاطر", "en": "Client meeting in 2 weeks. They expect a working plan and a clear point of contact, and already flagged concerns about delivery speed.", "ar": "اجتماع العميل بعد أسبوعين. متوقعين خطة شغالة ونقطة تواصل واضحة، وسبق واتكلموا عن قلقهم من سرعة التسليم."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "Ahmed was promoted from Senior Analyst yesterday. Strong individual contributor for 3 years. First time managing people.", "ar": "أحمد اترقّى من Senior Analyst إمبارح. محلل قوي فرديًا لمدة 3 سنين. أول مرة يدير ناس."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "No SOP, no communication cadence, no escalation path. Team members are unsure who to go to with blockers.", "ar": "مفيش SOP، مفيش نظام تواصل، مفيش مسار تصعيد. أعضاء الفريق مش عارفين يروحوا لمين لو في عائق."}, {"en_t": "History", "ar_t": "التاريخ", "en": "The previous informal lead left 3 weeks ago without documenting anything. Two deliverables slipped in that gap.", "ar": "القائد الغير رسمي السابق سايب الشركة من 3 أسابيع من غير أي توثيق. اتأخرت مهمتين في الفترة دي."}], "correctRank": ["shielded", "partner", "advocate", "visionary"], "reason_en": "With no SOP, a first-time manager, and a two-week deadline, Ahmed needed structure before he could lead independently.", "reason_ar": "من غير SOP، ومدير لأول مرة، وموعد نهائي بعد أسبوعين، أحمد كان محتاج هيكلة واضحة قبل ما يقدر يقود لوحده.", "consequences_en": {"shielded": "You built the workflow together and gave Ahmed a clear structure to lead from. The team walked into the client meeting with a shared plan. Ahmed's confidence grew because he had a foundation to build on.", "partner": "Your questions helped Ahmed think it through, but without concrete structure he spent two weeks improvising the basics. The plan felt assembled at the last minute.", "advocate": "Ahmed appreciated the encouragement, but the team still had no workflow. By the client meeting, roles were undefined and Ahmed was firefighting.", "visionary": "Left to design the process alone in his first week, Ahmed spent most of his time guessing. Two deliverables slipped, echoing the exact gap the previous lead left behind."}, "consequences_ar": {"shielded": "بنيت الـ workflow معاه وديتله هيكلة واضحة يقود منها. الفريق دخل اجتماع العميل بخطة واحدة متفق عليها. ثقة أحمد زادت لأنه كان عنده أساس يبني عليه.", "partner": "أسئلتك ساعدته يفكر، بس من غير هيكلة حقيقية قضى الأسبوعين بيرتجل الأساسيات. الخطة حسيت إنها اتلملمت في آخر لحظة.", "advocate": "أحمد قدّر التشجيع، بس الفريق فضل من غير workflow. لحد اجتماع العميل، الأدوار كانت لسه مش واضحة وأحمد كان بيطفي حرايق.", "visionary": "لما اتسيب يصمم العملية لوحده في أول أسبوع له، قضى معظم وقته بيخمن. اتأخرت مهمتين، بنفس الفجوة اللي سابها القائد السابق."}}, {"title": "Sara", "sub_en": "The Disengaged Star", "sub_ar": "النجمة اللي فقدت حماسها", "script": [{"who": "m", "en": "Sara, I noticed you've been quieter in our check-ins lately. How are you doing?", "ar": "سارة، لاحظت إنك بقيتي هادية في الاجتماعات آخر فترة. إنتي عاملة إيه؟"}, {"who": "p", "en": "I'm fine. Just a lot on my plate with the daily reports on top of everything else.", "ar": "تمام. بس شغلي زاد أوي مع التقارير اليومية فوق باقي الشغل."}, {"who": "m", "en": "You've hit target every quarter for years — this is the first time I've seen you like this.", "ar": "إنتي بتحققي الهدف كل ربع سنة من سنين - دي أول مرة أشوفك كده."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "Senior Sales Executive, 7 years tenure. Owns a major account portfolio and a growing pile of daily reporting requirements added over the last year.", "ar": "مسؤولة مبيعات أول، خبرة 7 سنين. مسؤولة عن محفظة عملاء كبيرة وكم متزايد من التقارير اليومية اللي اتضافت في السنة اللي فاتت."}, {"en_t": "Person background", "ar_t": "خلفية الشخص", "en": "Consistently hit targets every quarter for years. Known as reliable and skilled, never previously flagged as a concern.", "ar": "بتحقق الأهداف باستمرار من سنين. معروفة بالاعتمادية والمهارة، ومفيش قلق عليها قبل كده أبدًا."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "No hard deadline, but disengagement has lasted 2 months and is starting to show in client responsiveness.", "ar": "مفيش موعد نهائي محدد، بس فقدان الحماس مستمر من شهرين وبدأ يبان في سرعة ردها على العملاء."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "Sara has said little unprompted lately. In the last 1:1 she mentioned feeling buried in the daily report requirement.", "ar": "سارة بقت بتتكلم قليل من غير ما تتسأل. في آخر اجتماع فردي قالت إنها حاسة إنها غرقانة في متطلبات التقرير اليومي."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "Response times have slipped. Her tone shifted from proactive to flat 'sounds good' agreement with no follow-up questions.", "ar": "وقت الرد بطّأ. نبرتها اتغيرت من المبادرة لموافقة باهتة 'تمام' من غير أي أسئلة متابعة."}, {"en_t": "History", "ar_t": "التاريخ", "en": "Two colleagues in similar roles left this year citing admin overload; no changes were made to reporting requirements after their exits.", "ar": "اتنين زمايلها في أدوار مشابهة سابوا الشركة السنة دي بسبب زحمة الأعمال الإدارية، ومفيش أي تغيير حصل في متطلبات التقارير بعد ما سابوا."}], "correctRank": ["advocate", "partner", "shielded", "visionary"], "reason_en": "Her competence was never in question — the real blockers were burnout and administrative load, so removing friction mattered more than more oversight or more challenge.", "reason_ar": "كفاءتها مكانتش موضع شك أبدًا - العائق الحقيقي كان الإرهاق وزحمة الأعمال الإدارية، فشيل العوائق كان أهم من زيادة المتابعة أو التحدي.", "consequences_en": {"advocate": "Cutting the daily report down to what mattered freed Sara to focus on accounts again. Within weeks her responsiveness — and her tone in meetings — came back.", "partner": "Coaching conversations surfaced the real issue, but without actually changing her workload, the burnout didn't lift. She stayed polite and disengaged.", "shielded": "More oversight read as more pressure on someone already overloaded. Sara became quieter, not more engaged.", "visionary": "Left alone, Sara didn't push back on her own workload. The disengagement continued, and a resignation conversation followed within the quarter."}, "consequences_ar": {"advocate": "تقليل التقرير اليومي لأهم النقاط بس حرر سارة ترجع تركز على عملاءها. خلال أسابيع رجعت سرعة ردها - ونبرتها في الاجتماعات رجعت زي الأول.", "partner": "محادثات الكوتشينج كشفت المشكلة الحقيقية، بس من غير تغيير فعلي في حجم شغلها، الإرهاق ما اتحلّش. فضلت مؤدبة بس بعيدة.", "shielded": "زيادة المتابعة حسّت زي ضغط إضافي على حد أصلاً محمّل فوق طاقته. سارة بقت أهدأ، مش أكتر تفاعلًا.", "visionary": "لما اتسيبت لوحدها، سارة معترضتش على حجم شغلها. فقدان الحماس استمر، وبعد كده حصلت محادثة استقالة خلال نفس الربع."}}, {"title": "IT Team", "sub_en": "Change Under Pressure", "sub_ar": "تغيير تحت الضغط", "script": [{"who": "m", "en": "We're rolling out the new ERP next month. I want to hear your concerns before we lock the plan.", "ar": "هنطلق نظام الـ ERP الجديد الشهر الجاي. عايز أسمع مخاوفكم قبل ما نقفل الخطة."}, {"who": "p", "en": "Honestly, the timeline worries us. The last migration caused a week of outages when we weren't consulted early enough.", "ar": "بصراحة، الجدول الزمني قلقنا. آخر ترحيل سبب أسبوع تعطل لما محدش استشارنا بدري."}, {"who": "m", "en": "Noted. Let's make sure that doesn't happen again.", "ar": "مسجّل. خلينا نتأكد إن ده مش هيتكرر."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "5-person IT team rolling out a new ERP system company-wide next month, replacing a system used for 8 years.", "ar": "فريق IT من 5 أفراد بيطلقوا نظام ERP جديد على مستوى الشركة الشهر الجاي، بديل لنظام مستخدم من 8 سنين."}, {"en_t": "Team background", "ar_t": "خلفية الفريق", "en": "All 5 have 4+ years of technical experience. Track record of delivering complex projects on time.", "ar": "الـ 5 كلهم عندهم خبرة تقنية 4 سنين+. سجل حافل بتسليم مشاريع معقدة في الوقت المحدد."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "Go-live in 4 weeks. Client-facing operations depend on the new system working without disruption.", "ar": "الإطلاق بعد 4 أسابيع. عمليات مواجهة العملاء معتمدة على شغل النظام الجديد من غير أي تعطل."}, {"en_t": "Team profile", "ar_t": "بروفايل الفريق", "en": "In last week's meeting the team openly raised concerns about the transition plan and its risk to current operations.", "ar": "في اجتماع الأسبوع اللي فات، الفريق أثار مخاوف بصراحة حول خطة الانتقال وخطرها على العمليات الحالية."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "No formal channel yet exists for the team to shape the rollout plan; concerns were raised but not yet addressed.", "ar": "مفيش قناة رسمية لسه للفريق يشكّل بيها خطة الإطلاق؛ المخاوف اتقالت بس لسه ما اتعالجتش."}, {"en_t": "History", "ar_t": "التاريخ", "en": "A previous system migration 2 years ago was rushed without team input and caused a week of client-facing outages.", "ar": "ترحيل نظام سابق من سنتين اتعمل بسرعة من غير رأي الفريق وسبب أسبوع تعطل قدام العملاء."}], "correctRank": ["partner", "advocate", "shielded", "visionary"], "reason_en": "A technically strong team raising real concerns needs a say in the plan, not just instructions or blind autonomy.", "reason_ar": "فريق قوي تقنيًا وبيثير مخاوف حقيقية محتاج يبقى ليه رأي في الخطة، مش بس تعليمات أو استقلالية عمياء.", "consequences_en": {"partner": "Building the transition plan together surfaced two real risks the team had already spotted. Go-live happened with no major incidents, and the team owned the outcome.", "advocate": "Removing some pressure helped morale, but the specific technical concerns they'd raised were never actually addressed in the plan.", "shielded": "A fully prescribed plan skipped the exact risks the team had flagged. Old issues from the last migration resurfaced.", "visionary": "Left to plan alone with no forum for their concerns, the team proceeded cautiously and missed the go-live window by two weeks."}, "consequences_ar": {"partner": "بناء خطة الانتقال مع بعض كشف عن خطرين حقيقيين كان الفريق شايفهم أصلاً. الإطلاق حصل من غير أي مشاكل كبيرة، والفريق تملّك النتيجة.", "advocate": "تقليل الضغط شوية ساعد المعنويات، بس المخاوف التقنية المحددة اللي أثاروها ما اتعالجتش فعليًا في الخطة.", "shielded": "خطة مفروضة بالكامل تجاهلت بالظبط المخاطر اللي حذّر منها الفريق. مشاكل الترحيل القديمة رجعت تاني.", "visionary": "لما اتسيبوا يخططوا لوحدهم من غير أي منصة لمخاوفهم، الفريق تحرك بحذر وفوّت موعد الإطلاق بأسبوعين."}}, {"title": "Mona", "sub_en": "The High Performer", "sub_ar": "صاحبة الأداء العالي", "script": [{"who": "m", "en": "This project has a lot of visibility — I want to make sure you have what you need.", "ar": "المشروع ده ظاهر قوي - عايز أتأكد إن معاكي كل اللي محتاجاه."}, {"who": "p", "en": "Honestly, what I need most is space. I work best without daily check-ins, and I've already got a plan drafted.", "ar": "بصراحة، أكتر حاجة محتاجاها هي المساحة. بشتغل أحسن من غير متابعة يومية، وعندي خطة مسودة أصلاً."}, {"who": "m", "en": "You delivered your last three projects that way. Let's talk about what that looks like here.", "ar": "إنتي سلّمتي آخر 3 مشاريع بالطريقة دي. خلينا نتكلم إزاي هيبقى شكل ده هنا."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "Project Manager leading a new strategic initiative: large budget, executive visibility, 6-week timeline.", "ar": "مديرة مشروع بتقود مبادرة استراتيجية جديدة: ميزانية كبيرة، ظهور تنفيذي، مدة 6 أسابيع."}, {"en_t": "Person background", "ar_t": "خلفية الشخص", "en": "Delivered her last 3 projects on time and under budget. Consistently rated as a top performer.", "ar": "سلّمت آخر 3 مشاريع في الوقت وتحت الميزانية. متقيّمة باستمرار كصاحبة أعلى أداء."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "6 weeks to delivery, with leadership tracking progress closely given the budget size.", "ar": "6 أسابيع للتسليم، والإدارة العليا بتتابع التقدم عن قرب بسبب حجم الميزانية."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "In the kickoff, Mona explicitly asked to 'be left to work on it without daily check-ins.'", "ar": "في اجتماع الانطلاق، منى طلبت صراحة إنها 'تتسيب تشتغل من غير متابعة يومية'."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "She has a clear plan already drafted and has flagged she works best without close supervision.", "ar": "عندها خطة واضحة مسودة أصلاً وأكدت إنها بتشتغل أحسن من غير إشراف قريب."}, {"en_t": "History", "ar_t": "التاريخ", "en": "On a similar project last year, heavy check-ins from a different manager visibly frustrated her and slowed her down.", "ar": "في مشروع مشابه السنة اللي فاتت، المتابعة المكثفة من مدير تاني أحبطتها بوضوح وبطّأها."}], "correctRank": ["visionary", "partner", "shielded", "advocate"], "reason_en": "A proven performer who explicitly asked for space needed trust and a clear target, not more check-ins.", "reason_ar": "صاحبة أداء مثبتة وطلبت مساحة بوضوح كانت محتاجة ثقة وهدف واضح، مش متابعة زيادة.", "consequences_en": {"visionary": "Given the space and a clear target, Mona delivered ahead of schedule and under budget, exactly as she had on her last three projects.", "partner": "Periodic coaching check-ins were tolerated but added friction she didn't need — she still delivered, just with more required updates than she wanted.", "shielded": "Daily oversight on someone who explicitly asked for space backfired. Mona's pace slowed and frustration showed in her updates.", "advocate": "Encouragement without a clear target left ambiguity about priorities. The plan drifted slightly off scope by week 3."}, "consequences_ar": {"visionary": "لما اديتها المساحة وهدف واضح، منى سلّمت قبل الموعد وتحت الميزانية، بالظبط زي آخر 3 مشاريع ليها.", "partner": "متابعات كوتشينج دورية اتقبلت بس ضافت احتكاك مكنتش محتاجاه - سلّمت بردو، بس بتحديثات أكتر مما كانت عايزة.", "shielded": "المتابعة اليومية لحد طلب مساحة بوضوح جابت نتيجة عكسية. سرعة منى بطّأت والإحباط بان في تحديثاتها.", "advocate": "التشجيع من غير هدف واضح سايب غموض في الأولويات. الخطة انحرفت شوية عن نطاقها بحلول الأسبوع الثالث."}}, {"title": "Karim", "sub_en": "Experience ≠ Competence", "sub_ar": "الخبرة مش دايمًا كفاءة", "script": [{"who": "m", "en": "Karim, I need the board report built from the new analytics tool this time, not the old one.", "ar": "كريم، محتاج تقرير مجلس الإدارة المرة دي مبني على أداة التحليل الجديدة، مش القديمة."}, {"who": "p", "en": "Sure, I've got 10 years of analysis experience, I'll figure it out.", "ar": "تمام، عندي 10 سنين خبرة في التحليل، هعرف أظبطها."}, {"who": "m", "en": "Just flagging — nobody's used this specific tool for a board-level report yet. The last attempt had to be redone.", "ar": "بس أنبهك - محدش استخدم الأداة دي بالتحديد لتقرير على مستوى المجلس قبل كده. آخر محاولة اتعادت من الأول."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "10-year veteran assigned to analyze results using a data tool the company adopted only last month.", "ar": "موظف بخبرة 10 سنين مكلّف يحلل النتائج بأداة بيانات الشركة اعتمدتها الشهر اللي فات بس."}, {"en_t": "Person background", "ar_t": "خلفية الشخص", "en": "Deep expertise in his core field; broadly respected. Zero prior hands-on use of this specific tool.", "ar": "خبرة عميقة في مجاله الأساسي؛ محترم على نطاق واسع. صفر استخدام عملي سابق للأداة دي بالتحديد."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "Results are needed for a board report in 3 weeks — the first time this tool's output will be presented at that level.", "ar": "النتائج مطلوبة لتقرير مجلس إدارة بعد 3 أسابيع - أول مرة مخرجات الأداة دي تتعرض على المستوى ده."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "Karim assumed his general seniority would carry him through and didn't ask for help initially.", "ar": "كريم افترض إن أقدميته العامة هتوصله، وطلبش مساعدة في الأول."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "No internal precedent exists yet for what 'done well' looks like with this specific tool.", "ar": "مفيش سابقة داخلية لسه توضح شكل 'العمل الجيد' بالأداة دي بالتحديد."}, {"en_t": "History", "ar_t": "التاريخ", "en": "The last person to use this tool without guidance produced a report that had to be redone before it reached leadership.", "ar": "آخر واحد استخدم الأداة دي من غير توجيه طلّع تقرير اتعاد من الأول قبل ما يوصل للإدارة."}], "correctRank": ["shielded", "partner", "advocate", "visionary"], "reason_en": "His general expertise didn't transfer to this specific, unprecedented task — the task itself needed defining, not his motivation.", "reason_ar": "خبرته العامة ما اتنقلتش للمهمة الجديدة دي اللي مالهاش سابقة - المهمة نفسها كانت محتاجة تتحدد، مش دافعيته.", "consequences_en": {"shielded": "Clear steps and defined success criteria for this specific tool closed the gap fast. The board report landed clean on the first pass.", "partner": "Coaching questions helped him reflect, but he still had to reverse-engineer the tool's mechanics himself, costing time he didn't have.", "advocate": "Encouragement didn't change the fact that he didn't yet know the tool. The report needed a late rework.", "visionary": "Left to figure out an unfamiliar tool alone, Karim repeated the same mistake the last person made — the report had to be redone."}, "consequences_ar": {"shielded": "خطوات واضحة ومعايير نجاح محددة للأداة دي بالتحديد قفلت الفجوة بسرعة. تقرير المجلس طلع نضيف من أول مرة.", "partner": "أسئلة الكوتشينج ساعدته يفكر، بس لسه كان محتاج يفكّك ميكانيكية الأداة بنفسه، وده كلّفه وقت مكانش عنده.", "advocate": "التشجيع ما غيّرش حقيقة إنه لسه ما يعرفش الأداة. التقرير احتاج إعادة عمل في اللحظة الأخيرة.", "visionary": "لما اتسيب يكتشف أداة مش متعود عليها لوحده، كريم كرر نفس غلطة اللي قبله - التقرير اتعاد من الأول."}}, {"title": "Sales Team", "sub_en": "Remove the Barrier", "sub_ar": "شيل العائق", "script": [{"who": "m", "en": "The survey results are in — most of you flagged the discount approval cycle as a problem.", "ar": "نتايج الاستبيان طلعت - أغلبكم حدد دورة موافقة الخصومات كمشكلة."}, {"who": "p", "en": "It takes three days. By the time it's approved, some deals have already gone cold.", "ar": "بتاخد 3 أيام. لما توافق، بعض الصفقات تكون بردت خالص."}, {"who": "m", "en": "That's on me to fix, not on your close rate.", "ar": "ده مسؤوليتي أصلحه، مش مسؤوليتكم في نسبة إغلاق الصفقات."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "8-person sales team consistently hitting 105% of monthly target across the last 2 quarters.", "ar": "فريق مبيعات من 8 أفراد بيحقق باستمرار 105% من الهدف الشهري في آخر ربعين."}, {"en_t": "Team background", "ar_t": "خلفية الفريق", "en": "Experienced team, strong close rates, high morale on paper.", "ar": "فريق خبير، نسب إغلاق قوية، معنويات عالية على الورق."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "No hard deadline — but every day of delay in the approval cycle risks live deals.", "ar": "مفيش موعد نهائي محدد - بس كل يوم تأخير في دورة الموافقة بيهدد صفقات حية."}, {"en_t": "Team profile", "ar_t": "بروفايل الفريق", "en": "Internal survey: 6 of 8 said the 3-day discount approval cycle is costing them deals.", "ar": "استبيان داخلي: 6 من 8 قالوا إن دورة موافقة الخصم اللي بتاخد 3 أيام بتكلفهم صفقات."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "Approvals route through two extra sign-offs added last year that were never revisited.", "ar": "الموافقات بتمر بموافقتين إضافيتين اتضافوا السنة اللي فاتت وما اتراجعوش خالص."}, {"en_t": "History", "ar_t": "التاريخ", "en": "The approval steps were added after a single incident 18 months ago and never re-evaluated since.", "ar": "خطوات الموافقة اتضافت بعد حادثة واحدة من 18 شهر وما اتقيّمتش تاني من ساعتها."}], "correctRank": ["advocate", "partner", "visionary", "shielded"], "reason_en": "A high-performing team's real constraint was a slow process, not their skill or effort — removing the barrier unlocked what was already working.", "reason_ar": "العائق الحقيقي لفريق عالي الأداء كان بطء العملية، مش مهارتهم أو مجهودهم - شيل العائق حرّر اللي كان شغال أصلاً.", "consequences_en": {"advocate": "Simplifying the approval cycle to one sign-off cut deal-loss complaints to nearly zero within a month. The team kept doing what already worked, just faster.", "partner": "Talking through the approval concerns built goodwill, but the process itself stayed slow — deals kept slipping at the same rate.", "visionary": "Removing approvals altogether created a different problem: two discount decisions later needed correction with the client.", "shielded": "Explaining why the approval steps existed didn't change the fact that they were the actual bottleneck. Complaints continued."}, "consequences_ar": {"advocate": "تبسيط دورة الموافقة لموافقة واحدة قلل شكاوى خسارة الصفقات لحد الصفر تقريبًا خلال شهر. الفريق كمّل يعمل اللي كان شغال، بس أسرع.", "partner": "الكلام عن مخاوف الموافقة بنى نية طيبة، بس العملية نفسها فضلت بطيئة - الصفقات كملت تضيع بنفس المعدل.", "visionary": "شيل الموافقات خالص خلق مشكلة تانية: قرارين خصم احتاجوا تصحيح مع العميل بعدين.", "shielded": "شرح ليه خطوات الموافقة موجودة ما غيّرش حقيقة إنها هي العنق الزجاجة الفعلية. الشكاوى استمرت."}}, {"title": "Youssef", "sub_en": "Ideas Need Structure", "sub_ar": "الأفكار محتاجة هيكلة", "script": [{"who": "p", "en": "I've got another idea for improving the checkout flow, but same as last time, I'm not sure how to actually build it.", "ar": "عندي فكرة تانية لتحسين مسار الدفع، بس زي المرة اللي فاتت، مش متأكد أطبقها إزاي فعليًا."}, {"who": "m", "en": "That's the third time you've stalled at this exact step.", "ar": "دي تالت مرة تقف عند نفس الخطوة بالظبط."}, {"who": "p", "en": "I know. The idea's clear in my head, the execution part is where I get stuck.", "ar": "عارف. الفكرة واضحة في دماغي، بس التنفيذ هو اللي بعلق فيه."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "Product analyst generating customer-experience improvement ideas, expected to also help shape how they get built.", "ar": "محلل منتج بيولّد أفكار لتحسين تجربة العميل، ومتوقع منه كمان يساعد في تشكيل إزاي تتنفذ."}, {"en_t": "Person background", "ar_t": "خلفية الشخص", "en": "Consistently one of the more creative voices in ideation sessions; well-regarded for original thinking.", "ar": "دايمًا من أكتر الأصوات إبداعًا في جلسات توليد الأفكار؛ محترم بسبب تفكيره الأصيل."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "No hard deadline, but stalled ideas mean missed improvement opportunities each sprint.", "ar": "مفيش موعد نهائي محدد، بس الأفكار المتوقفة معناها فرص تحسين ضايعة كل sprint."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "In three of his last four proposals, he stalled at the exact same point: 'how do I do this practically?'", "ar": "في 3 من آخر 4 مقترحات، وقف عند نفس النقطة بالظبط: 'أعمل ده عمليًا إزاي؟'"}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "He has more unimplemented ideas in his backlog than any other analyst on the team.", "ar": "عنده أفكار غير منفذة في قائمته أكتر من أي محلل تاني في الفريق."}, {"en_t": "History", "ar_t": "التاريخ", "en": "Last quarter one of his strongest ideas was quietly dropped after he couldn't move it past the concept stage alone.", "ar": "الربع اللي فات، واحدة من أقوى أفكاره اتسقطت بهدوء بعد ما عجز ينقلها من مرحلة الفكرة لوحده."}], "correctRank": ["partner", "advocate", "shielded", "visionary"], "reason_en": "His ideas were strong; what he lacked was a thinking partner for execution, not more autonomy or more rigid instructions.", "reason_ar": "أفكاره كانت قوية؛ اللي كان ناقصه هو شريك تفكير للتنفيذ، مش استقلالية زيادة أو تعليمات جامدة.", "consequences_en": {"partner": "Working through execution together turned his idea into an actual shipped feature — the first of his in two quarters to make it to production.", "advocate": "Encouragement kept his energy up, but the execution gap remained. The idea stalled again at the same step.", "shielded": "Handing him a ready-made execution plan solved this one idea but didn't build his own ability to bridge concept to delivery.", "visionary": "Left alone again, the pattern repeated — a promising idea stalled at the same execution point as before."}, "consequences_ar": {"partner": "العمل على التنفيذ مع بعض حوّل فكرته لميزة فعلية شغالة - أول فكرة ليه توصل للإنتاج من ربعين سنة.", "advocate": "التشجيع خلّى طاقته عالية، بس فجوة التنفيذ فضلت موجودة. الفكرة وقفت تاني عند نفس الخطوة.", "shielded": "إديته خطة تنفيذ جاهزة حلت الفكرة دي بس ما بنتش قدرته هو ينقل الفكرة للتنفيذ بنفسه.", "visionary": "لما اتسيب لوحده تاني، النمط اتكرر - فكرة واعدة وقفت عند نفس نقطة التنفيذ زي قبل."}}, {"title": "Rana", "sub_en": "The Strategic Stretch", "sub_ar": "القفزة الاستراتيجية", "script": [{"who": "m", "en": "I want you to lead the new cross-department initiative. It's a bigger stage than your current team.", "ar": "عايزك تقودي المبادرة الجديدة اللي بتعدي كذا قسم. دي مساحة أكبر من فريقك الحالي."}, {"who": "p", "en": "I've never coordinated across departments before, but I've been wanting a stretch like this.", "ar": "معملتش تنسيق بين أقسام قبل كده، بس كنت عايزة قفزة زي دي."}, {"who": "m", "en": "Your track record with your own team says you're ready. Let's talk about how I'll back you.", "ar": "سجلك مع فريقك بيقول إنك جاهزة. خلينا نتكلم إزاي هدعمك."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "Team Lead with 3 years managing a single 6-person team, now offered a project spanning 3 departments.", "ar": "قائدة فريق بخبرة 3 سنين في إدارة فريق واحد من 6 أفراد، دلوقتي عرض عليها مشروع بيعدّي 3 أقسام."}, {"en_t": "Person background", "ar_t": "خلفية الشخص", "en": "Strong track record — every team she's led has hit or exceeded targets.", "ar": "سجل قوي - كل فريق قادته حقق الهدف أو تخطاه."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "The cross-department project has executive visibility and a 3-month runway.", "ar": "المشروع اللي بيعدّي أقسام له ظهور تنفيذي ومدة 3 شهور."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "This would be her first time leading peers outside her direct team and coordinating across departments.", "ar": "دي هتبقى أول مرة تقود زملاء برة فريقها المباشر وتنسق بين أقسام."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "She has expressed interest in growing into a bigger role but hasn't been tested at this scope before.", "ar": "عبّرت عن رغبتها تكبر لدور أكبر، بس معملتش اختبار بالحجم ده قبل كده."}, {"en_t": "History", "ar_t": "التاريخ", "en": "Two other leads were given similar stretch assignments last year; the one given full ownership outperformed the one who was closely supervised.", "ar": "قائدين تانيين اتديلهم مهام مشابهة السنة اللي فاتت؛ اللي اتدتله ملكية كاملة أدى أحسن من اللي كان تحت متابعة قريبة."}], "correctRank": ["visionary", "partner", "advocate", "shielded"], "reason_en": "A leader with a track record stepping into a bigger stage needed trust and stretch, not closer supervision.", "reason_ar": "قائدة بسجل قوي بتدخل مساحة أكبر كانت محتاجة ثقة وتحدي، مش متابعة أقرب.", "consequences_en": {"visionary": "Given full ownership and an ambitious target, Rana rose to the scope of the project the same way she had with her own team — and delivered.", "partner": "Regular coaching support helped, but the close involvement slightly slowed her own decision-making on cross-department calls.", "advocate": "Encouragement without a clear mandate left her uncertain how much authority she actually had with departments outside her own.", "shielded": "Detailed oversight on someone with her track record read as a lack of trust, and visibly dented her confidence going into the project."}, "consequences_ar": {"visionary": "لما اديتلها ملكية كاملة وهدف طموح، رنا ارتقت لحجم المشروع بنفس الطريقة اللي عملتها مع فريقها - وسلّمت.", "partner": "دعم كوتشينج منتظم ساعد، بس التدخل القريب بطّأ شوية قراراتها في المكالمات بين الأقسام.", "advocate": "التشجيع من غير تفويض واضح سايبها مش متأكدة قد إيه صلاحيتها الفعلية مع أقسام برة فريقها.", "shielded": "متابعة تفصيلية على حد بسجلها حسّت زي نقص ثقة، وأثرت بوضوح على ثقتها وهي داخلة المشروع."}}, {"title": "Omar", "sub_en": "Needs Clarity", "sub_ar": "محتاج وضوح", "script": [{"who": "p", "en": "I still don't feel like I fully understand what's expected of me on this project.", "ar": "لسه مش حاسس إني فاهم تمامًا إيه المطلوب مني في المشروع ده."}, {"who": "m", "en": "Tell me what's unclear.", "ar": "قولي إيه اللي مش واضح."}, {"who": "p", "en": "Honestly, most of it. The brief assumes I already know steps nobody walked me through.", "ar": "بصراحة، معظمه. البريف مفترض إني عارف خطوات محدش شرحهالي."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "New analyst, 3 months into the role, currently assigned to a cross-team reporting project.", "ar": "محلل جديد، 3 شهور في الدور، مكلّف حاليًا بمشروع تقارير بين فرق."}, {"en_t": "Person background", "ar_t": "خلفية الشخص", "en": "Asks more clarifying questions than most new hires — often seen as thorough rather than slow.", "ar": "بيسأل أسئلة توضيحية أكتر من أغلب الموظفين الجدد - غالبًا بيتشاف كدقيق مش بطيء."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "First deliverable due in 10 days; his first individually-owned piece of work since joining.", "ar": "أول تسليمة مستحقة بعد 10 أيام؛ أول شغلانة مملوكة له فرديًا من ساعة ما انضم."}, {"en_t": "Person profile", "ar_t": "بروفايل الشخص", "en": "He said directly: 'I still don't feel like I fully understand what's expected of me on this project.'", "ar": "قال بصراحة: 'لسه مش حاسس إني فاهم تمامًا إيه المطلوب مني في المشروع ده.'"}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "The brief he was given was written for a more experienced analyst and skipped several assumed steps.", "ar": "البريف اللي اتديله كان مكتوب لمحلل أكتر خبرة وتجاهل عدة خطوات مفترضة."}, {"en_t": "History", "ar_t": "التاريخ", "en": "His onboarding buddy left the team last month, removing his main source of informal clarification.", "ar": "زميل الـ onboarding بتاعه ساب الفريق الشهر اللي فات، وده شال أهم مصدر ليه للتوضيح الغير رسمي."}], "correctRank": ["shielded", "partner", "advocate", "visionary"], "reason_en": "He said directly that expectations weren't clear — the fix was clarity, not more independence.", "reason_ar": "قال بصراحة إن التوقعات مش واضحة - الحل كان الوضوح، مش استقلالية زيادة.", "consequences_en": {"shielded": "Walking through the expectations step by step closed the gap immediately. He delivered the first piece on time and asked far fewer clarifying questions afterward.", "partner": "Coaching questions helped him think but didn't actually fill in the missing information from the brief — he stayed stuck at the same point.", "advocate": "Reassurance made him feel better temporarily, but he still didn't know what was expected, and the deadline pressure returned days later.", "visionary": "Treating his questions as a good sign and stepping back left him guessing on his very first solo deliverable. It missed the mark."}, "consequences_ar": {"shielded": "شرح التوقعات خطوة بخطوة قفل الفجوة فورًا. سلّم أول شغلانة في الميعاد وسأل أسئلة توضيحية أقل بكتير بعد كده.", "partner": "أسئلة الكوتشينج ساعدته يفكر بس ما ملّتش المعلومات الناقصة من البريف - فضل عالق في نفس النقطة.", "advocate": "الطمأنة خلّته يحس أحسن مؤقتًا، بس لسه مش عارف المطلوب، وضغط الموعد النهائي رجع بعد كام يوم.", "visionary": "لما اتعامل مع أسئلته كعلامة كويسة واتسيب لوحده، ضل حاير في أول تسليمة فردية ليه. جتله غلط."}}, {"title": "CS Team", "sub_en": "Policy Chaos", "sub_ar": "فوضى السياسات", "script": [{"who": "p", "en": "We've had the same three edge cases come up all week and nobody knows how the new return policy applies to them.", "ar": "نفس 3 حالات استثنائية بتيجي طول الأسبوع ومحدش عارف سياسة الإرجاع الجديدة بتتطبق عليهم إزاي."}, {"who": "m", "en": "Let's get everyone in a room and work through them together.", "ar": "خلينا نجمع الكل في أوضة واحدة ونحلها مع بعض."}, {"who": "p", "en": "That would help — right now everyone's giving customers different answers.", "ar": "ده هيفيد - دلوقتي كل واحد بيدي العملاء إجابة مختلفة."}], "evidence": [{"en_t": "Role & task", "ar_t": "الدور والمهمة", "en": "12-person customer service team, moderate-to-high experience, handling frontline customer interactions daily.", "ar": "فريق خدمة عملاء من 12 فرد، خبرة متوسطة لعالية، بيتعامل مع تفاعلات العملاء المباشرة يوميًا."}, {"en_t": "Team background", "ar_t": "خلفية الفريق", "en": "Stable team, low turnover, generally confident handling standard cases under the old policy.", "ar": "فريق مستقر، دوران وظيفي قليل، واثق عمومًا في التعامل مع الحالات القياسية تحت السياسة القديمة."}, {"en_t": "Deadline & stakes", "ar_t": "الموعد والمخاطر", "en": "The new return policy took effect immediately last week — edge cases are happening in live customer calls right now.", "ar": "سياسة الإرجاع الجديدة بدأت فورًا الأسبوع اللي فات - الحالات الاستثنائية بتحصل دلوقتي في مكالمات عملاء حية."}, {"en_t": "Team profile", "ar_t": "بروفايل الفريق", "en": "Multiple agents have separately flagged the same 3 edge cases in the first week.", "ar": "عدة موظفين نبّهوا بشكل منفصل لنفس 3 حالات استثنائية في الأسبوع الأول."}, {"en_t": "Current reality", "ar_t": "الواقع الحالي", "en": "No documented guidance yet exists for how the new policy applies to those edge cases.", "ar": "مفيش إرشادات موثقة لسه توضح إزاي السياسة الجديدة بتتطبق على الحالات دي."}, {"en_t": "History", "ar_t": "التاريخ", "en": "The last policy change 8 months ago also launched without edge-case guidance, and inconsistent handling caused customer complaints for weeks.", "ar": "آخر تغيير سياسة من 8 شهور اتطلق برضو من غير إرشادات للحالات الاستثنائية، والتعامل الغير متسق سبب شكاوى عملاء لأسابيع."}], "correctRank": ["partner", "shielded", "advocate", "visionary"], "reason_en": "An experienced team facing a sudden, ambiguous policy change needed to help shape the answer, not receive rigid rules or vague reassurance.", "reason_ar": "فريق خبير قدام تغيير سياسة مفاجئ وغامض كان محتاج يساهم في تشكيل الحل، مش ياخد قواعد جامدة أو طمأنة غامضة.", "consequences_en": {"partner": "Working through the recurring edge cases with the team produced guidance they had helped shape — and could apply consistently from day one.", "shielded": "Rigid rules covering only the obvious cases still left agents guessing on the edge cases that mattered most.", "advocate": "Reassurance didn't resolve the actual ambiguity. The same 3 edge cases kept causing inconsistent answers.", "visionary": "Left to interpret the policy individually, agents gave customers different answers to the same edge case — echoing the complaints from the last policy change."}, "consequences_ar": {"partner": "العمل على الحالات المتكررة مع الفريق طلّع إرشادات هما شاركوا في تشكيلها - وقدروا يطبقوها بثبات من أول يوم.", "shielded": "قواعد جامدة بتغطي بس الحالات الواضحة سايبت الموظفين محتارين في الحالات الاستثنائية اللي كانت أهم حاجة.", "advocate": "الطمأنة ما حلّتش الغموض الفعلي. نفس 3 الحالات الاستثنائية كملت تسبب إجابات غير متسقة.", "visionary": "لما اتسيبوا يفسروا السياسة كل واحد لوحده، الموظفين دوا العملاء إجابات مختلفة لنفس الحالة - بنفس شكاوى تغيير السياسة اللي فات."}}], "roles": {"shielded": {"en": {"name": "The Shielded Instructor", "desc": "I will show you exactly what to do. I will block the chaos for you."}, "ar": {"name": "المعلّم الحامي", "desc": "هوريك بالظبط تعمل إيه. وهحميك من أي فوضى حواليك."}}, "advocate": {"en": {"name": "The Supportive Advocate", "desc": "I will listen and encourage you. I will fix the broken system for you."}, "ar": {"name": "الداعم المساند", "desc": "هسمعك وهشجعك. وهصلح أي عوائق في النظام بدالك."}}, "partner": {"en": {"name": "The Collaborative Partner", "desc": "I will ask for your expert input. I will design the path with you."}, "ar": {"name": "الشريك التعاوني", "desc": "هسأل رأيك كخبير. وهصمم الطريق معاك مش بدالك."}}, "visionary": {"en": {"name": "The High-Performance Visionary", "desc": "I will trust you to handle it. I will challenge you to be the best."}, "ar": {"name": "القائد التحفيزي", "desc": "هثق فيك تمامًا تتصرف. وهحدّاك توصل لأفضل نسخة منك."}}}};
+const CASES = DATA.cases;
+const ROLES = DATA.roles;
+const APPROACH_IDS = ["shielded","advocate","partner","visionary"];
+
+const UI = {
+  en:{
+    startTitlePre:"Leadership ", startTitleSpan:"Control Room",
+    startSub:"10 real leadership situations. Investigate the evidence, diagnose the person, choose your move, and see the real consequence of your call.",
+    statCases:"Cases", statApproaches:"Approaches", statEvidence:"Evidence cards",
+    startBtn:"Enter the control room →", startNote:"Every case is graded — your choices build your Leadership DNA profile at the end.",
+    tagline:"Investigate. Diagnose. Decide. Impact.",
+    watchDesc:"Read the scene, then move into investigation.",
+    btnInvestigate:"Continue to investigation →",
+    investigateTitle:"Investigate — evidence board",
+    investigateDesc:"Open cards to gather what you need. Each card costs a little Leadership Energy.",
+    opened:"Opened", tapOpen:"Tap to open",
+    btnDiagnose:"Continue to diagnosis →",
+    diagnoseTitle:"Diagnose — build your assessment",
+    diagnoseDesc:"Use what you found to rate the situation.",
+    btnDecide:"Continue to decision →",
+    decideTitle:"Decide and act — choose your approach",
+    decideDesc:"Based on your diagnosis, what does NAME need from you right now?",
+    predicted:"Predicted impact",
+    noPreview:"You won't see the impact until after you act — just like in a real conversation.",
+    actualImpact:"Actual impact",
+    decisionLocked:"Decision locked in — you chose",
+    btnAction:"Take action →",
+    consequenceTitle:"Consequence — what actually happened",
+    watchPrefix:"Watch the case — ",
+    missionLabel:"Mission N of 10",
+    manager:"Manager:",
+    sliders:[
+      "Task competence (can they do this?)",
+      "Motivation / commitment (do they want to do it?)",
+      "Task clarity (how clear is what needs to be done?)",
+      "Urgency / time pressure"
+    ],
+    sliderLevels:["Low","Medium","High"],
+    impactLabels:["Team performance","Their confidence","Ownership & growth","Time to deliver","Trust in relationship"],
+    verdictBest:"Best match", verdictPartial:"Partial match", verdictWeak:"Weak match",
+    whyMatters:"Why this matters:",
+    strongestFit:"The strongest fit here was",
+    nextCase:"Next case →",
+    viewDash:"View your Leadership Dashboard →",
+    dashTitle:"Your Leadership Control Room results",
+    dashSub:"Here's how your 10 decisions played out.",
+    dashScoreLabel:" best-fit calls out of ",
+    dashCbc:"Case by case",
+    dashDna:"Your Leadership DNA",
+    dashDnaDesc:"How often you reached for each approach across all 10 cases.",
+    energyLeft:"Leadership Energy remaining",
+    restart:"Restart simulation",
+    notCompleted:"Not completed",
+    chipBest:"Best", chipPartial:"Partial", chipWeak:"Weak",
+    dnaLead:"Your dominant style is",
+    dnaTimes:"times",
+    viewDashLink:"View Leadership Dashboard →"
+  },
+  ar:{
+    startTitlePre:"غرفة ", startTitleSpan:"قيادة التحكم",
+    startSub:"10 مواقف قيادية حقيقية. حقّق في الأدلة، شخّص الموقف، اختار تحركك، وشوف النتيجة الحقيقية لقرارك.",
+    statCases:"كيسات", statApproaches:"أساليب", statEvidence:"كروت أدلة",
+    startBtn:"ادخل غرفة التحكم ←", startNote:"كل كيس بيتقيّم - اختياراتك بتبني بروفايل نمطك القيادي في الآخر.",
+    tagline:"حقّق. شخّص. قرر. أثّر.",
+    watchDesc:"اقرأ المشهد، وبعدين انتقل للتحقيق.",
+    btnInvestigate:"كمّل للتحقيق ←",
+    investigateTitle:"تحقيق — لوحة الأدلة",
+    investigateDesc:"افتح الكروت عشان تجمع اللي محتاجه. كل كارت بياخد شوية من Leadership Energy.",
+    opened:"اتفتح", tapOpen:"دوس تفتح",
+    btnDiagnose:"كمّل للتشخيص ←",
+    diagnoseTitle:"تشخيص — ابني تقييمك",
+    diagnoseDesc:"استخدم اللي لقيته عشان تقيّم الموقف.",
+    btnDecide:"كمّل للقرار ←",
+    decideTitle:"قرر وتحرك — اختار أسلوبك",
+    decideDesc:"بناءً على تشخيصك، إيه اللي NAME محتاجه منك دلوقتي؟",
+    predicted:"الأثر المتوقع",
+    noPreview:"مش هتشوف الأثر إلا بعد ما تتصرف - بالظبط زي أي محادثة حقيقية.",
+    actualImpact:"الأثر الفعلي",
+    decisionLocked:"القرار اتقفل - اخترت",
+    btnAction:"نفّذ القرار ←",
+    consequenceTitle:"النتيجة — اللي حصل فعلًا",
+    watchPrefix:"شاهد الكيس — ",
+    missionLabel:"المهمة N من 10",
+    manager:"المدير:",
+    sliders:[
+      "الكفاءة في المهمة (يقدر يعملها؟)",
+      "الدافعية/الالتزام (عايز يعملها؟)",
+      "وضوح المهمة (واضح المطلوب إيه؟)",
+      "الإلحاح/ضغط الوقت"
+    ],
+    sliderLevels:["منخفض","متوسط","عالي"],
+    impactLabels:["أداء الفريق","ثقة الشخص","الملكية والنمو","وقت التسليم","الثقة في العلاقة"],
+    verdictBest:"الاختيار الأمثل", verdictPartial:"اختيار جزئي", verdictWeak:"اختيار ضعيف",
+    whyMatters:"ليه ده مهم:",
+    strongestFit:"الأنسب هنا كان",
+    nextCase:"الكيس التالي ←",
+    viewDash:"شوف داشبورد القيادة بتاعك ←",
+    dashTitle:"نتايج غرفة تحكم القيادة بتاعتك",
+    dashSub:"دي خلاصة الـ 10 قرارات اللي اخدتها.",
+    dashScoreLabel:" اختيار أمثل من أصل ",
+    dashCbc:"تفصيل كل كيس",
+    dashDna:"نمطك القيادي (Leadership DNA)",
+    dashDnaDesc:"كام مرة لجأت لكل أسلوب عبر الـ 10 كيسات.",
+    energyLeft:"الطاقة القيادية المتبقية",
+    restart:"إعادة المحاكاة",
+    notCompleted:"لسه ما اتعملش",
+    chipBest:"أمثل", chipPartial:"جزئي", chipWeak:"ضعيف",
+    dnaLead:"نمطك الأساسي هو",
+    dnaTimes:"مرات",
+    viewDashLink:"شوف داشبورد القيادة ←"
+  }
+};
+
+let lang = 'en';
+
+const TIERS = [
+  {perf:5,conf:4,own:4,time:5,trust:4},
+  {perf:3,conf:4,own:3,time:3,trust:3},
+  {perf:2,conf:3,own:2,time:2,trust:3},
+  {perf:1,conf:2,own:2,time:1,trust:2}
+];
+
+let state = {
+  energy: 100,
+  currentCase: 0,
+  unlockedCount: 1,
+  openedEvidence: new Set(),
+  sliderValues: {competence:1, motivation:1, clarity:1, urgency:1},
+  selectedApproach: null,
+  stagesDone: {watch:false, investigate:false, diagnose:false, decide:false},
+  results: {}
+};
+
+function t(key){ return UI[lang][key]; }
+
+function toggleLang(){
+  lang = lang === 'en' ? 'ar' : 'en';
+  document.getElementById('htmlRoot').setAttribute('lang', lang);
+  document.getElementById('htmlRoot').setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  document.getElementById('langBtn').textContent = lang === 'en' ? 'العربية' : 'English';
+  applyStaticTranslations();
+  if(!document.getElementById('appScreen').classList.contains('hidden')){
+    loadCase(state.currentCase, true);
+  }
+  if(!document.getElementById('dashboardScreen').classList.contains('hidden')){
+    showDashboard();
+  }
+}
+
+function applyStaticTranslations(){
+  document.getElementById('t-start-title').innerHTML = t('startTitlePre') + '<span>' + t('startTitleSpan') + '</span>';
+  document.getElementById('t-start-sub').textContent = t('startSub');
+  document.getElementById('t-stat-cases').textContent = t('statCases');
+  document.getElementById('t-stat-approaches').textContent = t('statApproaches');
+  document.getElementById('t-stat-evidence').textContent = t('statEvidence');
+  document.getElementById('t-start-btn').textContent = t('startBtn');
+  document.getElementById('t-start-note').textContent = t('startNote');
+  document.getElementById('t-tagline').textContent = t('tagline');
+  document.getElementById('t-watch-desc').textContent = t('watchDesc');
+  document.getElementById('t-btn-investigate').textContent = t('btnInvestigate');
+  document.getElementById('t-investigate-title').textContent = t('investigateTitle');
+  document.getElementById('t-investigate-desc').textContent = t('investigateDesc');
+  document.getElementById('t-opened').textContent = t('opened');
+  document.getElementById('t-btn-diagnose').textContent = t('btnDiagnose');
+  document.getElementById('t-diagnose-title').textContent = t('diagnoseTitle');
+  document.getElementById('t-diagnose-desc').textContent = t('diagnoseDesc');
+  document.getElementById('t-btn-decide').textContent = t('btnDecide');
+  document.getElementById('t-decide-title').textContent = t('decideTitle');
+  document.getElementById('t-predicted').textContent = t('predicted');
+  document.getElementById('t-noPreview').textContent = t('noPreview');
+  document.getElementById('t-btn-action').textContent = t('btnAction');
+  document.getElementById('t-consequence-title').textContent = t('consequenceTitle');
+  document.getElementById('t-dash-title').textContent = t('dashTitle');
+  document.getElementById('t-dash-sub').textContent = t('dashSub');
+  document.getElementById('t-dash-cbc').textContent = t('dashCbc');
+  document.getElementById('t-dash-dna').textContent = t('dashDna');
+  document.getElementById('t-dash-dna-desc').textContent = t('dashDnaDesc');
+  document.getElementById('t-energy-left').textContent = t('energyLeft');
+  document.getElementById('t-restart').textContent = t('restart');
+}
+
+function enterApp(){
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  loadCase(0);
+}
+
+function restartApp(){
+  state = {energy:100,currentCase:0,unlockedCount:1,openedEvidence:new Set(),sliderValues:{competence:1,motivation:1,clarity:1,urgency:1},selectedApproach:null,stagesDone:{watch:false,investigate:false,diagnose:false,decide:false},results:{}};
+  document.getElementById('dashboardScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+  loadCase(0);
+}
+
+function caseSub(c){ return lang==='en' ? c.sub_en : c.sub_ar; }
+function evText(ev){ return lang==='en' ? ev.en : ev.ar; }
+function evTitle(ev){ return lang==='en' ? ev.en_t : ev.ar_t; }
+function scriptText(l){ return lang==='en' ? l.en : l.ar; }
+function consequenceText(c, approach){ return (lang==='en' ? c.consequences_en : c.consequences_ar)[approach]; }
+function reasonText(c){ return lang==='en' ? c.reason_en : c.reason_ar; }
+function roleName(id){ return ROLES[id][lang].name; }
+function roleDesc(id){ return ROLES[id][lang].desc; }
+
+function loadCase(idx, keepStage){
+  state.currentCase = idx;
+  if(!keepStage){
+    state.openedEvidence = new Set();
+    state.sliderValues = {competence:1, motivation:1, clarity:1, urgency:1};
+    state.selectedApproach = null;
+    state.stagesDone = {watch:false, investigate:false, diagnose:false, decide:false};
+  }
+
+  const alreadyDone = state.results[idx] !== undefined;
+
+  ['watch','investigate','diagnose','decide','consequence'].forEach((s,i)=>{
+    const sec = document.getElementById('sec-'+s);
+    const num = document.getElementById('num-'+s);
+    if(keepStage && state.stagesDone[s]){
+      sec.classList.remove('locked'); num.classList.add('done'); num.innerHTML = '&#10003;';
+    }else if(keepStage && i===0){
+      sec.classList.remove('locked'); num.classList.remove('done'); num.innerHTML = i+1;
+    }else if(!keepStage){
+      if(i===0) sec.classList.remove('locked'); else sec.classList.add('locked');
+      num.classList.remove('done'); num.innerHTML = i+1;
+    }
+  });
+  document.getElementById('btnToDiagnose').disabled = state.openedEvidence.size < 3;
+
+  const c = CASES[idx];
+  document.getElementById('missionLabel').textContent = t('missionLabel').replace('N', idx+1);
+  document.getElementById('watchTitle').textContent = t('watchPrefix') + c.title + ', ' + caseSub(c);
+  document.getElementById('decideDesc').textContent = t('decideDesc').replace('NAME', c.title);
+  document.getElementById('scriptArea').innerHTML = c.script.map(l=>{
+    const cls = l.who === 'p' ? 'who a' : 'who';
+    const label = l.who === 'p' ? c.title + ':' : t('manager');
+    return `<p><span class="${cls}">${label}</span> ${scriptText(l)}</p>`;
+  }).join('');
+
+  if(alreadyDone){
+    ['watch','investigate','diagnose','decide','consequence'].forEach(s=>{
+      document.getElementById('sec-'+s).classList.remove('locked');
+      document.getElementById('num-'+s).classList.add('done');
+      document.getElementById('num-'+s).innerHTML = '&#10003;';
+    });
+    state.stagesDone = {watch:true, investigate:true, diagnose:true, decide:true};
+    state.selectedApproach = state.results[idx].chosen;
+    renderConsequenceFor(idx);
+  }else{
+    document.getElementById('consequenceArea').innerHTML = '';
+    document.getElementById('impactArea').innerHTML = '';
+    document.getElementById('nextCaseArea').innerHTML = '';
+  }
+
+  renderStepper();
+  renderCaseList();
+  renderEvidence();
+  renderEnergy();
+  renderSliders();
+  renderApproaches();
+  if(!keepStage) window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  const doneCount = Object.values(state.stagesDone).filter(Boolean).length;
+  el.innerHTML = [0,1,2,3,4].map(i=>{
+    let cls = 'step-dot';
+    if(i < doneCount) cls += ' done'; else if(i === doneCount) cls += ' active';
+    return `<div class="${cls}">${i+1}</div>`;
+  }).join('');
+}
+
+function renderCaseList(){
+  const el = document.getElementById('caseList');
+  let html = '';
+  CASES.forEach((c,i)=>{
+    const isActive = i === state.currentCase;
+    const isDone = state.results[i] !== undefined;
+    const isLocked = i >= state.unlockedCount;
+    let cls = 'case-item';
+    if(isActive) cls += ' active'; else if(isLocked) cls += ' locked'; else if(isDone) cls += ' done';
+    html += `<div class="${cls}" onclick="${isLocked?'':'loadCase('+i+')'}">
+      <div class="case-num">${isDone && !isActive ? '&#10003;' : i+1}</div>
+      <div><div class="case-title">${c.title}</div><div class="case-sub">${caseSub(c)}</div></div>
+      ${isLocked?'<span class="lock-icon">&#128274;</span>':''}
+    </div>`;
+  });
+  if(state.unlockedCount >= 10 && Object.keys(state.results).length >= 1){
+    html += `<div class="dash-link" onclick="showDashboard()">${t('viewDashLink')}</div>`;
+  }
+  el.innerHTML = `<h3>${lang==='en'?'Case files':'ملفات الكيسات'}</h3>` + html;
+}
+
+function renderEvidence(){
+  const c = CASES[state.currentCase];
+  const grid = document.getElementById('evidenceGrid');
+  grid.innerHTML = c.evidence.map((ev,i)=>{
+    const opened = state.openedEvidence.has(i);
+    return `<div class="ev-card ${opened?'opened':''}" onclick="openEvidence(${i})">
+      <div class="ev-title">${evTitle(ev)}</div>
+      ${opened ? `<div class="ev-body">${evText(ev)}</div>` : `<div class="ev-hint">${t('tapOpen')}</div>`}
+    </div>`;
+  }).join('');
+  document.getElementById('evOpenedCount').textContent = state.openedEvidence.size;
+}
+
+function openEvidence(i){
+  if(state.openedEvidence.has(i)) return;
+  state.openedEvidence.add(i);
+  state.energy = Math.max(0, state.energy - 8);
+  renderEvidence();
+  renderEnergy();
+  document.getElementById('btnToDiagnose').disabled = state.openedEvidence.size < 3;
+}
+
+function renderEnergy(){
+  const el = document.getElementById('energyVal');
+  el.textContent = state.energy;
+  el.className = 'energy-val ' + (state.energy < 40 ? 'low' : 'ok');
+}
+
+function renderSliders(){
+  const el = document.getElementById('sliderArea');
+  el.innerHTML = UI[lang].sliders.map((label, idx)=>{
+    const ids = ['competence','motivation','clarity','urgency'];
+    const id = ids[idx];
+    const val = state.sliderValues[id];
+    return `<div class="slider-row">
+      <div class="slider-label"><span>${label}</span><span class="reading">${UI[lang].sliderLevels[val]}</span></div>
+      <input type="range" min="0" max="2" step="1" value="${val}" oninput="updateSlider('${id}', this.value)">
+      <div class="slider-scale"><span>${UI[lang].sliderLevels[0]}</span><span>${UI[lang].sliderLevels[1]}</span><span>${UI[lang].sliderLevels[2]}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function updateSlider(id, val){
+  state.sliderValues[id] = parseInt(val);
+  renderSliders();
+}
+
+const APP_COLORS = {shielded:"var(--coral)", advocate:"var(--cyan)", partner:"var(--gold)", visionary:"var(--blue)"};
+
+function renderApproaches(){
+  const grid = document.getElementById('approachGrid');
+  const decided = state.results[state.currentCase] !== undefined;
+  grid.innerHTML = APPROACH_IDS.map(id=>{
+    const selected = state.selectedApproach === id;
+    const name = roleName(id);
+    const cls = (selected?'selected':'') + (decided?' locked-card':'');
+    const click = decided ? '' : `onclick="selectApproach('${id}')"`;
+    return `<div class="app-card ${cls}" ${click}>
+      <div class="app-icon" style="background:${APP_COLORS[id]};color:#0A0A20;">${name[0]}</div>
+      <div class="app-name">${name}</div>
+      <div class="app-desc">${roleDesc(id)}</div>
+    </div>`;
+  }).join('');
+
+  const actionArea = document.getElementById('decideActionArea');
+  if(decided){
+    const chosenName = roleName(state.results[state.currentCase].chosen);
+    actionArea.innerHTML = `<div class="decided-note">&#128274; ${t('decisionLocked')} <b>${chosenName}</b></div>`;
+  }else{
+    actionArea.innerHTML = `
+      <p style="font-size:12.5px;color:var(--text-faint);margin:0 0 14px;" id="t-noPreview">${t('noPreview')}</p>
+      <button class="btn full" id="btnTakeAction" ${state.selectedApproach?'':'disabled'} onclick="takeAction()">
+        <span id="t-btn-action">${t('btnAction')}</span>
+      </button>`;
+  }
+}
+
+function selectApproach(id){
+  if(state.results[state.currentCase] !== undefined) return;
+  state.selectedApproach = id;
+  renderApproaches();
+}
+
+function renderImpactFor(caseObj, chosenApproach){
+  const el = document.getElementById('impactArea');
+  const rankIdx = caseObj.correctRank.indexOf(chosenApproach);
+  const d = TIERS[rankIdx];
+  const rows = [
+    {label:UI[lang].impactLabels[0], val:d.perf, color:"var(--coral)"},
+    {label:UI[lang].impactLabels[1], val:d.conf, color:"var(--cyan)"},
+    {label:UI[lang].impactLabels[2], val:d.own, color:"var(--blue)"},
+    {label:UI[lang].impactLabels[3], val:d.time, color:"var(--gold)"},
+    {label:UI[lang].impactLabels[4], val:d.trust, color:"var(--cyan)"}
+  ];
+  el.innerHTML = `<div style="font-size:13px;font-weight:800;margin-bottom:10px;">${t('actualImpact')}</div>` +
+    rows.map(r=>`<div class="impact-row">
+    <div class="impact-label">${r.label}</div>
+    <div class="impact-track"><div class="impact-fill" style="width:${r.val*20}%;background:${r.color};"></div></div>
+  </div>`).join('');
+}
+
+function completeStage(stage){
+  state.stagesDone[stage] = true;
+  const next = nextStageId(stage);
+  document.getElementById('sec-'+next).classList.remove('locked');
+  const num = document.getElementById('num-'+stage);
+  num.classList.add('done'); num.innerHTML = '&#10003;';
+  renderStepper();
+  document.getElementById('sec-'+next).scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function nextStageId(stage){
+  const order = ['watch','investigate','diagnose','decide','consequence'];
+  return order[order.indexOf(stage)+1];
+}
+
+function renderConsequenceFor(idx){
+  const c = CASES[idx];
+  const r = state.results[idx];
+  if(!r) return;
+  const verdictLabel = r.verdict==='best'?t('verdictBest'):r.verdict==='partial'?t('verdictPartial'):t('verdictWeak');
+  const explain = `${t('strongestFit')} ${roleName(r.correct)} — ${roleDesc(r.correct)} ${reasonText(c)}`;
+  document.getElementById('consequenceArea').innerHTML = `
+    <div class="verdict ${r.verdict}">${verdictLabel}</div>
+    <div class="outcome-text">${consequenceText(c, r.chosen)}</div>
+    <div class="learn-box"><b>${t('whyMatters')}</b> ${explain}</div>
+  `;
+  renderImpactFor(c, r.chosen);
+  if(idx + 1 < 10){
+    document.getElementById('nextCaseArea').innerHTML = `<button class="btn" onclick="loadCase(${idx+1})">${t('nextCase')}</button>`;
+  }else{
+    document.getElementById('nextCaseArea').innerHTML = `<button class="btn" onclick="showDashboard()">${t('viewDash')}</button>`;
+  }
+}
+
+function takeAction(){
+  const c = CASES[state.currentCase];
+  const approach = state.selectedApproach;
+  const rankIdx = c.correctRank.indexOf(approach);
+  const verdict = rankIdx === 0 ? 'best' : rankIdx === 1 ? 'partial' : 'weak';
+
+  state.results[state.currentCase] = {chosen:approach, correct:c.correctRank[0], verdict:verdict};
+  state.stagesDone.decide = true;
+  const numDecide = document.getElementById('num-decide');
+  numDecide.classList.add('done'); numDecide.innerHTML='&#10003;';
+  document.getElementById('sec-consequence').classList.remove('locked');
+  document.getElementById('num-consequence').classList.add('done');
+  document.getElementById('num-consequence').innerHTML = '&#10003;';
+  renderStepper();
+  renderApproaches();
+
+  if(state.currentCase + 1 < 10){
+    state.unlockedCount = Math.max(state.unlockedCount, state.currentCase + 2);
+  }
+  renderConsequenceFor(state.currentCase);
+  renderCaseList();
+  document.getElementById('sec-consequence').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showDashboard(){
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('dashboardScreen').classList.remove('hidden');
+
+  const results = state.results;
+  const total = Object.keys(results).length;
+  const bestCount = Object.values(results).filter(r=>r.verdict==='best').length;
+  const pct = total ? Math.round((bestCount/total)*100) : 0;
+  document.getElementById('dashScore').textContent = pct + '%';
+  document.getElementById('dashScoreLabel').textContent = bestCount + t('dashScoreLabel') + total;
+  document.getElementById('dashEnergy').textContent = state.energy;
+
+  const resEl = document.getElementById('dashResults');
+  resEl.innerHTML = CASES.map((c,i)=>{
+    const r = results[i];
+    if(!r) return `<div class="result-row"><div class="result-case">${c.title}</div><div style="color:var(--text-faint);font-size:12px;">${t('notCompleted')}</div></div>`;
+    const chip = r.verdict==='best'?t('chipBest'):r.verdict==='partial'?t('chipPartial'):t('chipWeak');
+    return `<div class="result-row">
+      <div class="result-case">${c.title}</div>
+      <div style="font-size:12px;color:var(--text-dim);">${roleName(r.chosen)}</div>
+      <div class="result-chip ${r.verdict}">${chip}</div>
+    </div>`;
+  }).join('');
+
+  const tally = {shielded:0, advocate:0, partner:0, visionary:0};
+  Object.values(results).forEach(r=>{ tally[r.chosen] = (tally[r.chosen]||0) + 1; });
+  const maxTally = Math.max(1, ...Object.values(tally));
+  const dnaEl = document.getElementById('dashDNA');
+  dnaEl.innerHTML = APPROACH_IDS.map(id=>{
+    const count = tally[id] || 0;
+    const pctW = Math.round((count/maxTally)*100);
+    return `<div class="impact-row">
+      <div class="impact-label">${roleName(id)}</div>
+      <div class="impact-track"><div class="impact-fill" style="width:${pctW}%;background:${APP_COLORS[id]};"></div></div>
+      <div style="width:20px;text-align:${lang==='en'?'right':'left'};font-size:12px;color:var(--text-dim);">${count}</div>
+    </div>`;
+  }).join('');
+
+  let topId = APPROACH_IDS[0];
+  APPROACH_IDS.forEach(id=>{ if(tally[id] > tally[topId]) topId = id; });
+  const dnaSummary = document.getElementById('dnaSummary');
+  if(Object.values(tally).some(v=>v>0)){
+    dnaSummary.innerHTML = `${t('dnaLead')} <b>${roleName(topId)}</b> (${tally[topId]} ${t('dnaTimes')}/10) — ${roleDesc(topId)}`;
+  }else{
+    dnaSummary.innerHTML = '';
+  }
+}
+
+applyStaticTranslations();
+</script>
+</body>
+</html>
